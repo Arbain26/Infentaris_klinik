@@ -1083,6 +1083,8 @@
           allTransactions = json.data;
           populateFilterOptions();
           applyFilters();
+        } else {
+          showToast((json.message || 'Gagal mengambil data') + (json.error ? ': ' + json.error : ''), 'error');
         }
       } catch (err) {
         console.error('Gagal mengambil transaksi:', err);
@@ -1540,7 +1542,7 @@
           closeModalTransaksi();
           await fetchTransaksi();
         } else {
-          showToast(json.message || 'Gagal menyimpan transaksi', 'error');
+          showToast((json.message || 'Gagal menyimpan transaksi') + (json.error ? ': ' + json.error : ''), 'error');
         }
       } catch (err) {
         console.error('Error simpan transaksi:', err);
