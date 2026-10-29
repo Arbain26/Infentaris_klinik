@@ -1,0 +1,26 @@
+{
+  "name": "klinik-inventaris",
+  "version": "1.0.0",
+  "description": "Sistem Laporan Inventaris & Pengeluaran/Pemasukan Klinik",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "klinik",
+    "inventaris",
+    "laporan",
+    "keuangan",
+    "express",
+    "mysql"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mysql2": "^3.12.0"
+  }
+}

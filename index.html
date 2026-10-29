@@ -1,0 +1,2489 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Laporan Inventaris & Pengeluaran/Pemasukan Klinik</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- SheetJS with Full Styling (xlsx-js-style) & jsPDF + AutoTable CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .badge-pemasukan {
+      background-color: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+
+    .badge-pengeluaran {
+      background-color: #fff1f2;
+      color: #0cf104;
+      border: 1px solid #fecdd3;
+    }
+  </style>
+</head>
+
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+  <!-- TOP HEADER / NAVBAR -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+
+        <!-- Logo & Title Klinik -->
+        <div class="flex items-center space-x-3.5">
+          <div class="w-12 h-12 rounded-xl bg-white border border-slate-200 p-1 flex items-center justify-center shadow-sm shrink-0">
+            <img id="headerLogoImg" src="data:image/png;base64,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" alt="Logo Aisyiyah" class="w-10 h-10 object-contain" />
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 id="headerNamaKlinikTitle" class="text-base sm:text-lg font-bold tracking-tight text-slate-900 leading-tight">
+                KLINIK AISYIYAH PANGKAJENE
+              </h1>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                Online
+              </span>
+            </div>
+            <p id="headerAlamatKlinik" class="text-xs text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
+              <i class="fa-solid fa-location-dot text-emerald-600 text-xs"></i>
+              <span>Jl. Andi Cammi. No. 17 Pangkajene Kab. Sidenreng Rappang</span>
+            </p>
+            <p id="headerKontakKlinik" class="text-[11px] text-slate-400 mt-0.5 hidden sm:block">
+              Email: klinikaisyiyahpangkajene@gmail.com • Hp. 0878-3117-7100
+            </p>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Utama -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <!-- Tombol Pengaturan Klinik -->
+          <button onclick="openModalPengaturan()" title="Pengaturan Kop & Tanda Tangan"
+            class="inline-flex items-center justify-center p-2.5 sm:px-3.5 sm:py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200">
+            <i class="fa-solid fa-gear sm:mr-1.5 text-slate-600"></i>
+            <span class="hidden sm:inline">Pengaturan</span>
+          </button>
+
+          <!-- Tombol Tambah Transaksi -->
+          <button onclick="openModalTambah()"
+            class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm shadow-emerald-600/30 transition-all hover:shadow-md">
+            <i class="fa-solid fa-circle-plus mr-2 text-sm"></i>
+            <span>Catat Transaksi</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1">
+
+    <!-- 3 SUMMARY CARDS -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+
+      <!-- KARTU 1: TOTAL PEMASUKAN / DANA KAS (HIJAU) -->
+      <div
+        class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg shadow-emerald-500/15 relative overflow-hidden transition-transform duration-200 hover:-translate-y-1">
+        <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold tracking-wider uppercase text-emerald-100">
+            Pemasukan / Dana Masuk
+          </span>
+          <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white">
+            <i class="fa-solid fa-arrow-down-left text-lg"></i>
+          </div>
+        </div>
+        <div class="text-2xl sm:text-3xl font-extrabold tracking-tight" id="cardTotalPemasukan">
+          Rp 0
+        </div>
+        <p class="text-xs text-emerald-100 mt-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-info text-xs"></i>
+          <span id="labelFilterPemasukan">Total seluruh dana kas masuk</span>
+        </p>
+      </div>
+
+      <!-- KARTU 2: JUMLAH TOTAL PENGELUARAN & INVENTARIS (MERAH) -->
+      <div
+        class="bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl p-6 text-white shadow-lg shadow-rose-500/15 relative overflow-hidden transition-transform duration-200 hover:-translate-y-1">
+        <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold tracking-wider uppercase text-rose-100">
+            Total Pengeluaran & Inventaris
+          </span>
+          <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white">
+            <i class="fa-solid fa-arrow-up-right text-lg"></i>
+          </div>
+        </div>
+        <div class="text-2xl sm:text-3xl font-extrabold tracking-tight" id="cardTotalPengeluaran">
+          Rp 0
+        </div>
+        <p class="text-xs text-rose-100 mt-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-cart-shopping text-xs"></i>
+          <span id="labelFilterPengeluaran">Akumulasi seluruh barang & tagihan</span>
+        </p>
+      </div>
+
+      <!-- KARTU 3: SISA SALDO KAS KLINIK (BIRU / INDIGO) -->
+      <div
+        class="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 text-white shadow-lg shadow-indigo-600/15 relative overflow-hidden transition-transform duration-200 hover:-translate-y-1">
+        <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-semibold tracking-wider uppercase text-indigo-100">
+            Sisa Saldo Kas Klinik
+          </span>
+          <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white">
+            <i class="fa-solid fa-wallet text-lg"></i>
+          </div>
+        </div>
+        <div class="text-2xl sm:text-3xl font-extrabold tracking-tight" id="cardSisaSaldo">
+          Rp 0
+        </div>
+        <p class="text-xs text-indigo-100 mt-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-scale-balanced text-xs"></i>
+          <span>Pemasukan dikurangi Pengeluaran</span>
+        </p>
+      </div>
+
+    </section>
+
+    <!-- FILTER & EXPORT ACTION BAR -->
+    <section class="bg-white rounded-2xl p-5 mb-8 border border-slate-200/80 shadow-sm">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+        <!-- Filter Controls -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1">
+          <!-- Filter Tahun -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Tahun Anggaran
+            </label>
+            <select id="filterTahun" onchange="applyFilters()"
+              class="w-full text-sm rounded-lg border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3 border transition-colors">
+              <option value="semua">Semua Tahun</option>
+            </select>
+          </div>
+
+          <!-- Filter Bulan -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Bulan
+            </label>
+            <select id="filterBulan" onchange="applyFilters()"
+              class="w-full text-sm rounded-lg border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3 border transition-colors">
+              <option value="semua">Semua Bulan (1 Tahun)</option>
+              <option value="1">Januari</option>
+              <option value="2">Februari</option>
+              <option value="3">Maret</option>
+              <option value="4">April</option>
+              <option value="5">Mei</option>
+              <option value="6">Juni</option>
+              <option value="7">Juli</option>
+              <option value="8">Agustus</option>
+              <option value="9">September</option>
+              <option value="10">Oktober</option>
+              <option value="11">November</option>
+              <option value="12">Desember</option>
+            </select>
+          </div>
+
+          <!-- Filter Kategori -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Kategori
+            </label>
+            <select id="filterKategori" onchange="applyFilters()"
+              class="w-full text-sm rounded-lg border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3 border transition-colors">
+              <option value="semua">Semua Kategori</option>
+            </select>
+          </div>
+
+          <!-- Quick Search -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+              Pencarian Cepat
+            </label>
+            <div class="relative">
+              <input type="text" id="filterSearch" oninput="applyFilters()" placeholder="Cari uraian barang..."
+                class="w-full text-sm rounded-lg border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 py-2 pl-8 pr-3 border transition-colors">
+              <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-3 text-slate-400 text-xs"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tombol Export PDF & Excel -->
+        <div class="flex items-center gap-2 pt-2 lg:pt-5 border-t lg:border-t-0 border-slate-100">
+          <button onclick="exportToExcel()"
+            class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors">
+            <i class="fa-solid fa-file-excel mr-2 text-emerald-600 text-base"></i>
+            <span>Unduh Excel</span>
+          </button>
+          <button onclick="exportToPDF()"
+            class="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors">
+            <i class="fa-solid fa-file-pdf mr-2 text-rose-600 text-base"></i>
+            <span>Unduh PDF</span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB TAMPILAN (Laporan Pengeluaran Grouping vs Riwayat Dana Masuk) -->
+    <div class="flex items-center justify-between mb-4">
+      <div class="inline-flex p-1 bg-slate-200/80 rounded-xl space-x-1">
+        <button id="tabPengeluaranBtn" onclick="switchTab('pengeluaran')"
+          class="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm">
+          <i class="fa-solid fa-boxes-stacked mr-1.5 text-emerald-600"></i>
+          Laporan Inventaris & Pengeluaran
+        </button>
+        <button id="tabPemasukanBtn" onclick="switchTab('pemasukan')"
+          class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900">
+          <i class="fa-solid fa-money-bill-transfer mr-1.5 text-emerald-600"></i>
+          Dana Masuk / Pemasukan
+        </button>
+      </div>
+
+      <div class="text-xs font-semibold text-slate-500 hidden sm:block">
+        Format Resmi Grouping per Kategori
+      </div>
+    </div>
+
+    <!-- VIEW 1: TABEL LAPORAN INVENTARIS & PENGELUARAN (GROUPING PER KATEGORI) -->
+    <div id="viewPengeluaran" class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden mb-12">
+
+      <!-- KOP SURAT RESMI KLINIK BESERTA LOGO -->
+      <div class="p-6 bg-white border-b-2 border-slate-800 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+        <div class="w-20 h-20 bg-white border border-slate-200 rounded-xl p-1 flex items-center justify-center shadow-sm shrink-0">
+          <img id="reportKopLogoImg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAABBCAYAAACO98lFAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAC3cSURBVHhe3Xt3XBVdtuX85r1+/bp7Xs/r6fj16/6CkoPkKDnnnEFEFBNmzDlj+gQRBAQkCCJGECSK5JxREAOYc84K6Jp16qKfnXtm/pujh1tV996qs9fZe+21T9X9b/iz9vHjxz95/dTE/qc+doB/RsEj+CDtcv/DB3z8MIoPH/kqfUjWXr97hkev7+DG4/O49qQR7YNHUd4ex74T5R1bcYa9qnM76rpj0Hf1MO4/qceTp1149WYIw8NPeAZxBdklZWMY4TV4XWlbdOntL5o4II1K2vtHTQLhk3Gf+qf259t/9X0azNFwW1xWvCd7/9GrO+i9WYvi89lIrd6IXWUzsfSwPZYfMcOaY2bYdMIC0fmm2JlvhtgCCyScMsf+IjNkFJoih/1wkQXK64PQ0rEMV64k48GDKrx5fZNnJvBiHOKa7B/GrvrPti/t+NT/whNE+2sf/NRlHxCfEZcXAxCIy1AfxQgGH/cjtzkBW0tmYdFRT0RkmSEy1xRReSZYdtwSq05YYv1Jc2wtMMOOU2bYnW+B+FNWSCy0QOppU2QVGyO3xAhHyoxwrNQQBSV6OF2sj6oqO7Q2T8OlgRg8f9bG670Wg5DGIo3n8zj+vI19YKx9tuGL9k+D8GXjEc6C8ADZ/rvRdzh/rwMxZ9dhep4nQrMtMDnHAhGHrTE3zxILj1hi8TFzLDtBLyAAG/PNsYNGx3Dm4wvNkHyaAJSYI7OMXlA6kQAY43ipEU4SiCJul1Xoo/KMNqrLdVBbYYDWGkdc6F2C50/OMgKfSmP4coh/Ol6x/ZeGf9n+Kid8afif74smxaL0+gH9984jtnoXgjJdEZBhjeAcK4QdtkJErhVmHbbF3CPWmH/cAkvybegNTlhw0AsL0wMxJzEIc+LDMJ99YWIYovZNwsrkQGzL9sXeYx7IKLBF0RlzlFZNRPlZI1RWGKKmUh8Nldpoq9RFB3tXjQWG+pbg5dMajH58KzNV8NEXY/1n2mdO+Gea+Ninzz4bfo7s7hwE5wbD/oAVPLNtEZhjg5BDNgTBEhF51ph9xAkRmZ4I2hMGl3XzYLt4JSbO3gr9iBio+O+Gonc8eyLkPfZCwTMeyt4xMJryPWwjo+ERtQrTNs7Dmr2TkHHMExVnbVBXZUAQdNFcrY32Gm30VuvjXJUW+hvtce/Sbgy/ucaRjfzfg/Dpi3+yLbCly4tdMesg84t24eFlLDu9BtYHHGCXaQ03AuCeYwd/znzQYTuEZbvAPzEE1iuXQW9aNCZMioeSz34o+xyAgl8mFNlV/bKh5puNCX4HELFuNexnx0HRNwOqvllQ8c6Cgncm5DwPQNM/AWYRW+ATtRA7kqagtMwRzTVG6KgjCDV66K/RQX/tBFys0sX1rhl4/ayWIxRASAZINoxtSu3L7U/tb4Ig7UusT/ei8Z9OVXm9Cb6HwmG83xaWWY5wzrSH50F7+OXYwz/LHW4xETCduxaqQQk0NoOGZ9HYTEzwOQg1n2yo+OZA1f+g1JX8sqAbsgtd56ZhY+IiyHnFE5yDUCZASv6ZfJ9g8TuK3tmQJzjq/omwjliDLftmoKzYFefrTTFQq8+uiaF6PQzV6eJGkyte3M5geDwnUYsRC+ISneOXTPy0L5rM5r8LgnTo4zD/kPcJRk73SVgd8IFBmgPMMhxgm+EIh0wHuGc5wzVuMowWrYUiZ06BM67klyMZrCIM5myr0CAlGqfifwDq0owfkva1J+1A/4UgbEuaCUWPBAJGcAIyeB4C6J/O7/H7wjv80nmeLALEzhBynrURu5Mmo/2MLS436OJKvRZuNmjjTqMW7jQY49WNBHwcfShN5GfjhUFSF/vSH6n9BQhfNuEFog1TnCQ350E30QV6++1gdsAelum2BMEB9qleMFw3ByphuyHnncF4joF5+BYo+KZDjQNWCUinUQdpfDqN4ivBUBMeImbaJxP6QTtx/vxkbNw3C3KuiRI4KgRH2Z+d24pjHiO8Q3xHMSCHoXIAupOToe2/FTNXLkJRvjcGGw1xq1Ebdxt18KhRA08bJuLt0C5G8D2aL1K5EHG0k6EiA2LMO9j+JgjSPv8LIJOaj0It3hHq+52gn+YE43R6QqYLzBOCoTl3HQfIeOesf+uRjHVJUahrD4Nx2EYp9lUCZLOnKrZpmCp5QJmzKzhi0qo9cFmwBD3nQrFpXzic5m2CTmgczyXChmHBcyrys4rSOXL5XW577kf4qiUoqNoB49BdBCQDlpPX4VBWOG7Q8AdNWnjSOAEvG9XwoskQb69vpxGPJQCoMxkmwi6ZbZ/aXwXhy/2Tl6qhnuAO5SRHaKU4Q4ehYHDABYa7p0AtYrtkqLKPGGCO5AmTV67E9WseiE6ayrBIgLwnPcAnjTGeIfMIAqJII/UCt+NkeRjST4Wiu9cH+SWeqG8NhM+iNXR38TnyAgGQgZHB82RAwSsLplPXo77JD4Vl86ATEAsFeooyOUcnYAd2xIRjsN4Cz5s18bRZA6/Z3zYZ482NJHwceU1NIRhCMMUPXiCaBII03RIJSntsso3q612c8XDIJzlBdb8LNNNcoEtP0Ns+A8pTdvDiZPEAuqg/3Z4giEGr+sRhX8409Jz3g9OsxQhfswm2Mzbxs+QFfk6NYaJI9teftBnl1c441x+Ic+ed0drlgmd3zTFp+TKMF4YL/uD5FPgd9YA4BK/eDqNJG7A+YRr6LoUiMGoFFAmK4A118oUSgdD0j8GG7dNwo94eL1u08aZFE+9bNfGy1RTv7h+lVe9p4xg3SEDI2hgIQmDwlX9EHhDt1ttHcMuNwh/j7TE+1YUg0BPSnKG9KxQqzOVKBEDEreTiHLAgLcH4yvQM47ClaO30Q9ZRXxSfDUR+xTRo+e+gB6QRrExoB6UgcOk8FFe6o6fPF73n3dDU6YKrl80Rtjwc+mHUD+QSBRqnQBKMip6HrvMRmLXaDe2dgdiVGg4l71ieTxDvAXIM+YfnFR6j6b8HW7aFkxfM8K51AoZb1DHazNDo8MHbF82SbbL2ecY/hQOpg8eEs8io4yOWlyXiV7H2+GOSG8aTC9RTHaAVOwnK07ZL5CbiXMy8iG/hspKbM7fbz9mFFXEzsTPJHl1dbjhz1goPbjoicsNkBC9bAM3APTCfuQ3NPVNw/pwVujrd0dnjgZo2Z/R0W6OxxR8703dDwT0O9pFbELJ0IarrHdHY7Inso/aobfLB9LWTYTNnp8QRssxBviHZCuBUmIp1vXcjiRzzpmMiRlvVCcQEvG5g71/IZHdPMvwLDL7gBOmo7J3yoQ4oJgTid/uc8If9rlBMdoXaXn/Iz91A90+jB/DC7BIAwhuE63JfibFsN30TevrD0NDggtNlzigpd8CF8zbo6HBDMw2csnYlDCZvQHtXCPq7LdHe7oZW9qpaR/RdcEB/nw3mbl0DDe91KK6ahfwiG9y84YIDh8xZUXryfBa4dj0cszYsh7JXhgS+LHMIMqX4EhPCkDMJjUbpkWCMdhhgtEULIyTL1zWCKDNo5id/l4XEZxCEyhLtyfs38DiyAv9rrwN+TzL8Y7Iz5BO9obhsMQFIldKVClOVQF/MhDK78AghbESIqAfsw+akUNy7bo+cPHNUN3oh/7QJBi9aoKvNGnvSJmPpzijkHbPClYt26OhyR0OjO86UOuJKny0uXnaC5+wAhK2ORFePHzrajXCm3hKny12oFi1xuc8ElVWBMJmylcQrdATTLVOpyDpCY4gJUiYJK3inwS9yNYYqfIAWHYw0aGCYyvJlvRdGXp2XgSBDYgwE6Z8MlfTeM/hVjBN+m+iKr/a54etkJ4yLngaF0L1MazlkeqH4RPyLtCe8QEaIEggij3snYPKSCPR0OqCzyxJHC5xQUu2N7nM2uHDOnCWxM24MurJb4u4dekK3D0qrXXG6whFVlXro7nFFcz17sw9a6sxw9Yoj8ktdUFvtghbG+eWLTpi2MgKqvI7wPhXfXIZAriw8yUlSOiVXSHrDOxmbt81lqjTDaJMaRqgs31Vo4+XADhr9TiYV2CQQKCMkVJ6+fwuj1Ej8fK+jBMJ/sX+9xx/jIzdAOTAJxlN2Qifke6aqZNlFORPfuadBntJYUQDAeJTzSETGicUY6LPHlSsmOF1qh6oaX5wotMKlPmtcuuKChvOmONk5EcmNJthQ4oVF+fZYnW+Lrcd1cazJDZ395iRLF1w5zxBocUZBuSPKztoTEDsU0KtyihfAbj7TrxfBl8KAeoIZR1xfmZOiyMlR9DyI71wzoOWzCaWHw0iOWhitYT/DbEHQh593jznC2KLK6BgkWT0V+M1eH/znPlf8murwq0R3jGP1Jx+4D6oBMdiXOw+F5cEkpvn0iF0senZjXcIa2M1eDzWysvO8LdAK/B4ec9YyzoPRyhx9sd+e8WyJypYQ7C52wPxTprBKVEZQoTGMU1WYgfShnqLKwksVfke0YJmtj/ACY5beRijtdsOR026oafEhadqjrsESHd2uJM5FDD3Kc48keiInxDcWNuQiq4id9IpUTtJeeC1agQ3J22E1Kx5T5y3E4zpnjNZqYbiK3lCmg5f9e2gxy2+aLoEgIHnFGiGgYBN+vMeeILjj1wmu+H2cN+QidhBpCh1eLGTFSrR1huLGdV+k503DrHVTcX0oQIrdyPWTcbJsCuKzZkLfdxG27gvBhT47ZgBT5DV4wvuAGX67gwaWGWLacUUsO2OEXc0TUTFogkWFSqi8ZkZhZo6gQ+OwqMIQv4vVgtp+S4SzPD9eZ4/eHkt6hRmyC0JgPHkVnCLXIJ0eNz96CTYnTCI4QVgdv5SEGIWYjBm4POCDupaFsJm1i97wPUoOTsFonQGGz2rjfZk6XtYF4f3rS5LxMhDYam/1Qy41FD8hIf5PesJvyAd/3DCdMZZCpBlzdDkFr3QYhkRjRex85usgtPe4IfuYEc712ODqVXvU19niPI8dYirr6XZCd58ldlZYwD5NA9sbjDC/Qh/bKVwO9xpiZqE+lpVPxJyj47Gp2RIrz+ph3dmJSGCYxDRr41d7daF20AJKiTrwzJ6I422u6Os2ZobxwPbkMNQ0BKCPnNPcZIU718g7Z+ywea87GtuC0HfRj0BEEhCGMYlTnkp25uK5eM4MNFqpgZEyLbwsNsGbaycl2z+DsIP1wY92EIB4V/yCofDbBC98y7pAIjt/kh8JRymAJS1jz2r291i1ZyaOnnBAU5MzKs/aoazSHBd6bdDbZUZGN8cQ+SC11RJ+ebpYVmmEExdNkdpjhIUcwMzj8thSrYKspnGovaiCnhvaKOxQQGKdApaVKCL4+ATykgG0M3UQ026I0FIjGKZoo6if5HrBCJ0dlujtNifnTCSRWiPnqBVOnLDmZPjh4IlAOMxaQH5gKf+5TsmCxeTvUZvjQRnMTFGuhdfFmnjbtR4fhl/JQHj4/iWCTkXjRzHO+DnrhF+zf7VjMuTD4qTUIwkhqYg5TBDSEUAJe2FoFlqbLXD8pBVO5pP8aoUmsEZTow36ztljb60Vvo7RxKpqc+RdtoVxsjwWFGshr2cCHjzRx4dXOmRiPby7qIE35ybgwx1txiQH9lIdrdfUsbJKCx6545DZY4CVzBoOR7RhlWWAIy1WDI2JuHTJDsdPG+LkaRumYRdUVlujtt4GhWdCGbbRkoxWFeW3SOeitvFJwp5d08gLppInvD+tgeflARh5fkUGwvknN6GQMgX/ttcNPycf/DLBF39YvQAKwUKSyhSZtBYwpgnU/ZMxacUiNLSG4vZNS/T32CLvsBEKK11RS12QVGIHkzQ9/CJBFyopGggpNkXEcSX03tHBh+eaGO7Wwf2YCbgZJo8bngq45joe14LkMBj5DZ4d1QSuT8DbZxNQdEEHU/LksI4gpLTqYUGVGSYfNkR1ry9yj1qgtsaT0tsR1bUW5ABz3Lxph6Onp8NuhqhrxrQMx6vGUBYhMT1qNR6etqIa1MHwaS08KzDD8IMzMhAq71zAj3c64Cfx7vgPesEv4r3xzUJWcz4yd5JKYckjWKhIuZkn9UlB0JJZKK+yxY3LFrh52QytbZbIo+jxyLDG7FKGQ7dwYzkSoQLuP9XB6E0NPNingau2iripOQHXNdRwy0EVN4NUcWumCq5PJyCT5TC0iGCcVcUHAlHRr4bZJ1Vw8rIp1jXoQzdFD0tPEABmjPISC1y8YMduwXB0RvDymaxRdlEfZEiGi3QpxJyQ1go+h2BDgdV+xAMfz+jg3WldvM3XxtvzcTIQdrcU4F92O+PfBQjxbvjlbj98N3OztDwmKkRZjUDxIQCQPILbzMmOc77H4dMMC5LWuR4TXL1gjqxGW9gf1EN6lwWyOvWxuEIdA7d18XFIFXeX0Xg9ddyboIUhFzXcjdVhuauOkbvq+PhADR/uK2P4hhYeFivi1gEFPK9TwegzDRzr0kDwMXmsqdVBdK8jLJMmMGNQZpOD2lvN0NBkjVNlPvCOIhH6CA8Qy3OHqBypJMV4pXEfwgSvrTiVMo2zbshwYJV5Sgsv2pfJQIgoisN/j3XBjxM8CII7frUtFArhsZJLCRTFIoeiEEfSkpcICSLMbTmfRJaxOxC0aCFyDtugs9caoczzIScnIIYDnlekg2O9GsAzbdyL08R1XRU8mEBP8JXDi8oJ5AQa/lIBz54o4NJtTTx5rIyRp+OB5yoERhUPWxXx+sZ4cogmZuWPh/9JbaxmFnHM0kQcNcPFAUtmJCfsOxSG8HVroBeSKHmvtBolLc1xvGICBQjsylSQu1mRvi/Vx2iJBt6f0sarMg8ZCB4lW/Eve1zoCQRBaITNEZALEkJEoChCQniBIBixtHUI4zwzoRsag/nbIrF4ewRmr53OlBmAjktWCDiqiwWF8sjpM8XWGsb+Yw28a9TBkI0y7mvo46rTeLxs0MRHGv7h6XcYpBcc7NLFjHwdcoAJntIjHt4ZjxePx2H0oSJG7n+Hj8/lUTygjTlnTbGs3hymOVoIY2ruu0Qx1ueOGRsWwDBsK2xnRcNo8j4oeXHMBEOsZikHCBDEOmc2Jy0by9cuxcsSQ3wgSQ+fYlicMJCBIJcejh/FueLfmWf/I8ENv1k/E/IBByTjFZgVRIpUJQBiHcB72WZM37gGkZuXU+8HorPZCuc6bXH1sgO2HtGAV74hMiiLp+d+h+gKBTK+Fu6vVcIdDR1c09HA0ywtGk8Ansjh/RMVnOpQxKYaI8w9Y47jF81wqJnHOlUorxUw8kwZo0++Y/8G9x+pwy/3Wyys1cemTivYkXBrBzwo1GyQc8warZyEngtTqGFWQD9wA8caAxXPNGYHMYmyOmc8eWL+qnV4TC4ZKdbGcKEW3hVMkIHw77Ee+BH1gSDGn9ETvlo/m+50QDJc3vcAEUyDolcq9EN34Gh5GN69cMKrR1RxLFNr6/TRQz64MeTEtCiW37QxvUADkWX6ONyiiOFr+rjuq4h7KgTBTwWvutQZHt/h0UMl5J/XROngRGwsU8WWelN03LdEdJUeDrUxjNrUcO4GK78n4zH8mP2ZAqJK5bG5zZyKUgumqRo4XG+MGzeEXrDBpXNm6D9nhTNVrjhT7YYTFTMQsGqPlNJFZhNhIc8wDpm5HHcKnfC+RAfvCcLbfE0ZCP9CD/gRVeKP93lRJ7jh92sjoeCfCtOp2xGdNh8HjkdiS2IIFm3zQXSiMdOTFo4cVscxFjxHj+vxVQ/F5ZZYWuQElf0aCC3QxPe9ruhnNnjZqolrLqq4p6SNR8t0MfpAlSAoofbSBKyqt0L5HUdqBz0sqbTAmeu26Lhjhs7rRthJcA+dY+w+lsOHh+PoFYrYUauKtUWK2E0yNKQK3VNmg44eR1aiDmjrsGPV6sDCyx19F7yRdiwAHvMXwCBkHQymbIABJ1AtIBVOgfNxtcAdI6W69ASGw0m9MRDi3PDjva74NwECveGrNfMw3o8pcO33qGqZhd4+H3T0+aKlKwD1zd5obGEl2OCGKtbmFbVuOFvtRfR9MSfPAX7FttjT54joTkfcZlp81UxCdGYqJAiP12jj41NFvKKbx7Qaw/GIMVZRXE06ZYCQ09bYwtA6yMoxrccQ8yiyCph2PxKEkUff4d1TeWSQZ9Y3GGNSvgYUEvQQc9oezY12aGm1R0eHPdWjI871Oki6pbvXE73ngtB/IRADlNEtneEIWbMONr6zMVjgQcGkiRFmh3f5WmMgxLjgJ3vcmR1EOHjgK1aJojRW8Utk6bwbxqHbiehWuMxajLQ8T5QU66G8WAfFdKliEkxxiRFOFppi3mFL2GUoIbtNCZtq9dAyRPfvpCc4KeOmshYeLNXAx/sqePlMBXubdbG30xL72k0wnZoioNAMq2qsEFbEIoqyeXEJleOQNlOkHN4yJN7TE9afUcSeFm0cvWgMi3R1eoIdmuts0Mi03NTsgJZ2Z7S3OUn9RJk3tiZOxebESEQnR2D1nkUwjYiHS/BiXMtnKV06gZ6gTRDGwuGn5ISfxrmTEzzxU5bPv1s3l2kxQ+IEBRKLIgWHuBVmzvDIOj0HvZfmo/xsMI3XRkvVBNy+KtYRHZBUawbLQ4ZYXmsAm0xFpDUo4cM9Q1wNGYe7qlrkBlW87mAB80IBA1fVUEVjSi4aIYWV5rIGK+RccUJkuSFyLjng3HVDvLjH7MAsIeMEFYQeHgenPA0sqLeGdboWDteao6JYFf3nJ7JWsWPdYo2hi5Z4cscC1a3h8Fz6Pca7xUPeM4nckEQ7MhEeuQp3ixwkYhwp1MWbkzoyENSy51Iy0xuYIv8Hi6ffrJ9BMtkPdWE89YCqAMRbbGdCJzgeRuHRmLxiCRrbg9HYHIQzLEsv9Jkj9pgCNEhYyuQFjzx11FwgCb6gStylhFuaDAktFTxJozZgynvHsBi4qYmsenlkkmDDT09EyqAH7I/pk/zsWVCpYYTZ48Pj79jH4cUjZSxm6v02WQu/TTaCdao6OoYcCYAo1uxxa5B1C4u5BdsmI2jZUngt3AC90P0UduKeyCHKf2Y67xwsWbkez0osSYyaeEed8OaErgwE/5IY/GscQSAp/keiG369dQrkQuMlqSwUo/AIaQlNWsXhyViVTfBLgPX0zdAKXI3Jy/2o3Y1w964FTrC4KegzQPU1G1SdU8bzx4p418OQcJXHXXVNXHVRxPMqKsQXzBxMkzcfaSO3XRPLaybC9QR5It8cu+roXQ8nMBQUMPpIniDI4SFT5OVHxqi4ZIC1FZrIaCe499VZWltj0pJgrIpbju0HN8J6TiIUPCmOOEZpJZoTKW77qXPcij4ZWLluPnWCPoYZzu8L1fEqf6IMhNlFCfhRrBN+ss8ZP0siCDtCMC5iNysxSs9PxguVGJDBbZFzxQVyoBUUjznblrOaY23fo4/BK7q4ekcfbYN6rP81kMlU136dGeGZOh4fUsJlY0XcoWS+4iPPCo5APFbB26dyeP5QBY+fTGBW0MKNu6wsX7DIeqSKxwPfUDCNx7OHyqi7qs8KUhFdQ1q4dtcY3RdUcG1QBxcG3LEybioMJy+ny8dysoQ6pFCi10oLwdIygFiVzoaa117sj5uD4XIjhgJBYCp/UxsuA+FAfyXJ0RE/3efGcKBsjvXBt7O3kBdy+GUhl2XSWdxYER4hZKkC82/gqvXMGOHobqMSvGyAuzfNcf6CKY7Xs3ZoM0V0uTKaBqkYGc+iNrgVq4IhAnFLTQuD9sp4vJvVYpsWPt5RI2HKsaZXxsfranheMwE3jn+Hp+flmE2UabQaUuuUsKfBALkEtorfGRo0YuGki7YmXdwYdMCpsxEwCd9JaSyUohg3QaBCFOOX7knQFk2fLSjLDAbOGOBdEctpyvCXnVtkINTfH8BPYzzwMxLjz+O98J8E4uslK2i0KESIJEFQEjqcnqHkm0cAxG207zF3gy/qqrXx4JoFrvSbSitL5WctUdjGsGjWRu91bZy/zYF3c1uU0Y908fKUOm4FK+GmviqGtJVwxXwchrzlMBD4Fc5N+S36or7FxbhvMNynQt5QRc0VLZRxu+myLsr6dZHVQEJts8bZs1a40G2Gu0Nm6GVo7EmzhlXEOlaQVIliJUx4Lscv3QhmWIzjMbfIbbh0wp6lNAEgCC/yDfD+ao4MhCvP78Pw4AL8JNYVP0tk/bDfBV9tmAHF4GRZTBFRIT2lFWUyrMgSR4tD8OyBGwZ6zVBXZ4aKM5bUDq4orbRHa/dEXBzSQc81HWyj6Ak6pgOfw8ooGtDD+9c6+Diojod5Sri9UQV35qjjzmyW0suVcD1uPF43aQGPNPCQRddOGuye9S3WV2rgdK8+hu5oo4+ldU2dJepqHFBVZYE6Zog+8tD9Wy4oqfRF0PIoKHvtlwAQoSwLCY7bMwVRK5fhWSklM0F4ywLq6WlbZp0mGQhvRoYReSYe/7rbHj9hdvifJMffxATi22licYInYxcnUxPSk7W605z1SM32xokCHdQ32KCpww0FpWZoa7TCFYbDVaa9wYv6iD2rhUnicbzrLphapAnL5HFYUaaG9jvGePXaQOKKYbr6MCvGkYesNp/Tq54a4PiAFlWnKpxZi2yv00BclyV1gwaaL6rhMXXGE/JOJ3VGETNKYyNBb7VBeakOw8MdJ86uhnlEEr1V1D6yslpUwJp+8ciKC8WHGlO8K9fBmyKSYm0Yht/ckoEg2v6eYvx0t5OUIn+R6IlfJnrh68UroCg9NSJAEBVkFouQdFhOX4yUHE/09XlxVuxwkrn28oAFbjG3Dw0Y49ZlgtCvhRMdFnDN1oVl+njE1DHFFSnBPk8XttQQAUdUsJoaI2fQCkV3bLGPuX46JbF7njJ82VfWmaD4ignSzpljCfVH5Akt9A7qSiFyZ1ABj26p4fpVA4YftUaZJS6cd0JpuQ2mLA+Bpv9eTpbwAk4gx67AFO88dRPO5ztj9Cw5qlQLr09p4s257fj44d0PIPQ9ugGdzEjKZ2dpyf1XSa74ZgdTZUg8kSQAPukwmRKNNXHh6On3R3efN+IzPVBfa4JHty3R1emACz2s8S/7YHeSuFnigPZeO2TXWsD7oClLbE1srNdHSo8ZEs7ZYlmpJgJz5OGerQCDfXKwPqAK7XQNLKT6yyW/7Kg3xCyqOZ9jppTjaqhotWSBZIC2NjMWbG7MGCa4eVkTj29boYnnzWYl2dzGien3Y30TDrMpW1hSp8uA8EnF+nXT8ZYia4TpdYTe+LLEHK/vlEi2y0D4KLs1Obs8Fj/b44pfMEv8OskJf0jwxncL1pAMD0CP8rmgIhK3bgUityiCJBOF+TuXo7VnKnalhlGgzERyXhRCVy2Dnk8U9h1054DtKKJskVfphLmHHeGXo42wI4p0dT3kDrD0LlFB3oAVFlcaI6PfFgsrTbCx3ZafUcBs1vzBRy2xttAWZfWWjHsrgmCNDXHe8Ji7AKl505F7aip27A/Auf4Q1LVFImjxVOzNDmXqJGHX+yFo6XpWv2mYGLwNbQVBGK1h+XyG3lSqjpdNUzH69qZ0F0oCQbofy1ZypRVfJ/jjl/FO+B3D4r+SXDAuegrkg/fAaOperEpYjmnrlkA7cA9TUSqsZiXDanoMGTiRbpfK12Qousdg8/7VrOQCUVtjgu5uW1TUeCAlzxWV51wRU22BueSHGUeUEZAtD68cJfid0EdwrgqCD6kiKEcVUcWm+J7yuarHHRXVzDhnXKSF1OYafXR0ByN4xVKoe++EybRYqAfFwGn2RkxZuZyl/h7OfAwmr56HU5VzEJcbR72wF6s3LsDLRnOCoI73DIfX5fp4OZROAGSPJIx5Anc/jmKYh91yluM/9zoQBFf8IdEZ3yR4QW7pKkkoKfqlSbyg7C3W72TPE8lRmclLTMxO0jSbvhPpJxfiVLEFydEVRaWWOFbojZoGO+ZzG/SdJ3HemIisSnOc6HTB4XZXJDU4IabYEkU9DjhQpIFbd6zR1W2KK5ds0dnuhOIya5wmKEOXzNHabkovmAkN8ZScl0jZzFpeTOFiXByPWF4XayBawbuhGxwD27DV6CoKxsdGXbwnyQ6fUcOLOj+MvBuQABDtczh8ekap7GonfrfXXboh+3uqx6+T3TAuNhQK07dLF5QezSPbSmt30isHwWOii8d31Pz3ISRqGmfOGXVN5ihlmZ2VZ4XrgySvPjMUlVihuTOQoWKJm0P2uH7JhaW6I6opm+8M2aG90076XlWVDRrqCcRFG9SRJ04UWDMcbCiTLRGxajo0A6gHfGS35EUKVGAXd6UFgUspncSo4R+PlITZeNtChdhAFVrN1Fihh7dXD9DSd9IjSqJ9JkbZLVng5egIZpbuxq9jHPA1U+V37ONTXKG8fjYUQxKkTKEmUo+0kJkJdR9ZLpZWb1hjGE3ahtKzkzh4FkH0ghOFLmhsscPggAku9Dth3uaZiNwUSUDscYku3tNhh3NdTqipMmB6tURl02R4zgtFYs4sKf0NXTJjOjRGS7Mzco+Y4v5NZ+xIngT1gD1SXaNG4MW9BcWATILBSZGAoId4HcDMZYtwq94Jo20EgCC8r6YabQnDyNtrMnv/xBPYxMFP7tH1YBATD0zFb+Pt8F2yO+RTnKG2j2GxYjEvtp9IC2+gmpQ0OT1CEiQZGO+ZiekbV7PU9kfuCbpumzcKipxw66otiiucUVo7AxOnbMSczTNY81tQYeqinDPTSRAqKnVQUa6BpnY/GIesge+iVWjsmIH8QkPcuCyedLHE6VJHnMxnWFydBY9F0ZDzzpSN5ZOO4auocUSIOk9fg65iP3xo08NwMzMCi7KX1SZ4c++UZLt4MOnTzH8OB6nxoAyIj0huy8e3LK+/ZUgoiAe3UpygTu2gspDZgiEgQFAOEA9oCmktOrmBcem5PBURG6fShX1xssQdVUyhXb2T4L1gAZwWUHx57cPCrXNRWOmP9nYjHGX+b+t2JBi6OHXaAFXN4bCI2ErD9iJ8UyxClk7DtetuVKP6GBhwxVby1baUFXCdv5tVofBIsfwvC1Eh5hQJgNnkTSjM9sf7VoZBKyVyC2uUeobCpS008JlkqowDZFsSCDLX+ChliXcSRqN4MfIakYVb8S1LbPlUZ6iwa6W6Qi82ECpUjArS3WrBA7JyWwIiIIfesBdrEqZSRwRh8bYwZobJWPT9Cij5sMQVnEHhYjhlD+bsWIrH9+yRRw3Q3m2P0jId1DROwawN6yl2kmQ845kOXf/dOHA0jNpkNkPLES3tIXCctZTnS5XcX1YgycJRgd5gErYdOWmheNHCWW+hBxCEYUrxV70zMPJG3IoXbVSy91MbA4EwCGDoBuKJz2HxNDtfh57fhveRJRifaAc1hoR2qhMMUh1gFBcE5ci1JCNBjOJJNjEj4sn0LLhGrkZ/vw8SGNO6QZvhNHcn1AOTpPsA0mD5uW/csjB1wwaMvLBD3lFVdHbboLhUGwNX5sA4bJOk8CRvI8BKzDiW06L5+Wi4z5uPgUshiM+ayvcSpHMKThBeqUAiNJm0BWkE4EETAWjSxutmHYYCAWj1kGoEYaSwXQoFbojJFsfGwkEGghQLo3yTu+IxPtHabg/AOjkYSok20CQABmmOMEl3hsW+YGhHrYYSDRQDFmsPGv6JyM6fgUuXAmE1dTVdUwxOEKaYKVkGEWW4HFNayOpNaOycht0pJmhtcUNathNOVS2CHqtTsWgjfZ6epigthmQy1ETxloItSWG4di0IwUsWQ8lDlgXkqWZtwjcgKz0At5om4nGTJl406rAYozRud8Dw41O0RPZMs/SMszDsz0EQnvDpl2XiVYAh8JA2+X7JlUaY7w+EWrINdDIcMTHdCVaZdrBP9oHR6kVQCo0hSbG8pliJzVmEhTGrOTuikiNhkjyF24pHeqXylqlM3Mc0nLQXDpFbELnBEy0dHvDjLNvP3MW0l05j6QHis3yVAUgCljwtk3XLFpTUTMO6hGXSHSUln30IWLgEp08G4GajEe7Xa+Jhgy6eNWriWYsNhu/n0ILXwkzZPPOfMP/zATYJBBECMhDEk79jXsEufuckvcfd0sv1sEoJYEjYwSTDDhYZttJj/i7pbrDaOQXakZugGhjPmUygSkuTvEOQpnQzlIaLx2/VpHT6aaFDPPBxALPW+KOjywMGk1ZDjq4trVnwOwIsmQaQPRshQkmcS84vBebTtlGpfk8xtB3Lt0WivtgZQyTOG0yD9wQIorfYMxPk0oiXY0bL1KFk99gf6YVNFg58V3qgkyDIuswDpCgZ+6b4Qs2NNvgfmgHDFAeYpdvDLtMeLlkO8Mx2hHdqAKzXLYJ66A7OjliAEQaJR+koXmiwZDiJS4pzplPZalUqoqJ90dtNEELXSKEiVoPE0zESz/AcYlFHQfIKguMtHgnIgrpfLPyjonDw8CR01Zjjcr0uBmt1CYQmbtdp4k6jG94+LuSIxS/mZGOXTBYboo29ftqVQJAB8EP/1EgPBEP4BuNJgMF2+dkVLC5eCfMUG1Z+NnA6aMtK0JbFkQ11vzP89gfDas1saHO2VAMTZYAwl0vPFRIEIWyEF0hrlr6ZmLF+Jupap0F3UjSNHfMUAQY/IxSggm8uxhMYee9kGITsQcDiKOxNn4zas07oqzXAQC0JtVYLV2o1cbVGF7e7puLN03ox+h+s/AdN5glftC9BkLaEOwggWFuIR+VFe/D6HlKaU+CZ6QXbTGuCYAf/g3Ysja0wKdcKUw+7YHJqINy3zYDZ4pUEZCdneQ9DZL+0MqUkCM8vVyI9/bBYTN+yg6Ds4zHWJDwmT7BE/Kt4J0ArKBouCzZj1sZIJB30RyUr0tZqI3RU64z9BkobF2o0MVBthvsDG/H+zUVp4MIMqf8TSPwFCF82KSTExtjJhFdIP5pgG/04gqZbTYg6tQgeB+zhfdAKAYesEHrIBtMOW2Om+E3kEUfMOuSKKWkBCIidDdf1i2C3dA2MZ2yERtB69k1QC9qCCX4boBXIY4FrSZgr4L5kLULWRWH53vmIzQpEXoEjKs5aoYb1Rf1ZbbSe1ZFA6KrSRs9ZQwy0TcHjuyfxYfTx2HjFgDlWacT/uP1tEHgiWToR/8S++CO2ZLzxqT199win+k9gztFwBNMbgg6aYkquBSLybDDziCXmHLPAwhM2WHLMDsvYlx91xIpcT6zMCcbqQ1Ow/tB0bM6dju15U7Hj6CTsOe6B9CKKqBJjnKowQclZ0Y1QXmmA6jMGqKvURcMZTbRW6aG73pdFVwqG3w1xJGPmSg9vy8yXUqAYt2ze/mb7myBIYSH9BFCAIZD94XySM0hoj3W2h2/u4WRPLjYWL8CMg46YfNAEEYfNMO+IFaLYlxy1xvLjtlhz0gobCkyx9ZQJdhRZIqbQEvHFJthfMhHpNDynWB+HS41xbOwXsqfLDFBWYSj9SraiQgM1FRPR0RKCa4NxePvmAsczLKZFNl4xujEil46Jjc/9b7e/Gw7iu7KQkJ3oh/CQHRFYS1tfesbbh2i6XI6DLTux7tQ0zGL2EDdqo46InwmbS7+V3sAefdICuwrMEVtghr2Fpkg8bYbUYlMcLJ6I7DITHC5nXVFugIJSAxTxeE2NH3p6V+H2rRM0Xsy8+JWebGw/8JjsVTa6T2MS25/e/+vt74PwD9qnS35uX2wOf3iHey9v4Ny9BuR3JSOlZhEBsJWBcNISW/PNsJMgxJwyJwhmn0HIolccKp2IvFJTltVTWDPsxN37hXj9agAjIy+kc/99k/7P2/8TCP9/NOB/A8PRUiU+cGewAAAAAElFTkSuQmCC" alt="Logo Klinik" class="w-16 h-16 object-contain" />
+        </div>
+        <div class="text-center sm:text-left flex-1">
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-wide uppercase" id="reportKopNamaKlinik">
+            KLINIK AISYIYAH PANGKAJENE
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-700 mt-1" id="reportKopAlamatKlinik">
+            Jl. Andi Cammi. No. 17 Pangkajene Kabupaten Sidenreng Rappang, Provinsi Sulawesi Selatan
+          </p>
+          <p class="text-xs text-slate-500 mt-0.5" id="reportKopKontakKlinik">
+            Email: klinikaisyiyahpangkajene@gmail.com • Hp. 0878-3117-7100
+          </p>
+        </div>
+      </div>
+
+      <!-- Table Header Info Bar -->
+      <div
+        class="px-6 py-3.5 bg-slate-50/80 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+            <span>LAPORAN INVENTARIS DAN PENGELUARAN OPERASIONAL</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5" id="labelPeriodeLaporan">
+            Tahun Anggaran: Semua Periode
+          </p>
+        </div>
+        <div class="text-xs font-medium text-slate-500">
+          <span id="badgeJumlahItemPengeluaran"
+            class="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-200/80 text-slate-700 font-semibold">
+            0 Item Terdata
+          </span>
+        </div>
+      </div>
+
+      <!-- Main Grouped Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm" id="tablePengeluaran">
+          <thead>
+            <tr class="bg-slate-800 text-white text-xs uppercase tracking-wider">
+              <th scope="col" class="py-3 px-4 w-12 text-center font-bold">No</th>
+              <th scope="col" class="py-3 px-4 w-32 font-bold">Tanggal</th>
+              <th scope="col" class="py-3 px-4 font-bold">Jenis Barang / Uraian</th>
+              <th scope="col" class="py-3 px-4 w-28 text-center font-bold">Satuan</th>
+              <th scope="col" class="py-3 px-4 w-28 text-center font-bold">Metode</th>
+              <th scope="col" class="py-3 px-4 w-44 text-right font-bold">Harga / Nominal (Rp)</th>
+              <th scope="col" class="py-3 px-4 w-24 text-center font-bold print:hidden">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPengeluaran" class="divide-y divide-slate-100">
+            <!-- Diisi secara dinamis dengan Grouping Kategori, No 1-N, Sub-Total, dan JUMLAH TOTAL -->
+            <tr>
+              <td colspan="7" class="py-12 text-center text-slate-400">
+                <i class="fa-solid fa-spinner fa-spin text-2xl text-emerald-600 mb-2"></i>
+                <p>Memuat data inventaris & pengeluaran...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer Info Box (Rekap Saldo di bawah tabel) -->
+      <div
+        class="p-6 bg-slate-50/70 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="text-xs text-slate-500 space-y-1">
+          <p><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>Tabel disusun dengan sistem pengelompokan
+            resmi per Kategori barang.</p>
+          <p><i class="fa-solid fa-print text-slate-400 mr-1.5"></i>Unduhan Excel & PDF akan otomatis memuat kop surat
+            dan tanda tangan pejabat.</p>
+        </div>
+        <div
+          class="w-full md:w-auto bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-sm flex items-center justify-between md:justify-end gap-6 text-sm">
+          <div>
+            <span class="block text-xs text-slate-400">Grand Total Pengeluaran:</span>
+            <span class="font-extrabold text-rose-600 text-base" id="footerGrandTotalPengeluaran">Rp 0</span>
+          </div>
+          <div class="border-l pl-6 border-slate-200">
+            <span class="block text-xs text-slate-400">Sisa Saldo Kas:</span>
+            <span class="font-extrabold text-indigo-700 text-base" id="footerSisaSaldo">Rp 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BLOK TANDA TANGAN RESMI PADA LAPORAN -->
+      <div class="p-6 sm:p-8 bg-slate-50/40 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-8 text-sm">
+        <div class="text-center">
+          <p class="text-slate-600">Mengetahui,</p>
+          <p class="font-bold text-slate-800" id="signOnScreenJabatanKiri">Kepala Klinik</p>
+          <div class="h-16 flex items-center justify-center">
+            <span class="text-xs text-slate-300 italic">(Tanda Tangan)</span>
+          </div>
+          <p class="font-extrabold text-slate-900 underline" id="signOnScreenNamaKiri">dr. Syah Rizal Syam Pohan</p>
+          <p class="text-xs text-slate-600 mt-0.5" id="signOnScreenNipKiri">SIP: 139/SIPD/DPMPTSP/11/2022</p>
+        </div>
+        <div class="text-center">
+          <p class="text-slate-600" id="signOnScreenKotaTanggal">Pangkajene, 29 Oktober 2026</p>
+          <p class="font-bold text-slate-800" id="signOnScreenJabatanKanan">Pemegang Barang</p>
+          <div class="h-16 flex items-center justify-center">
+            <span class="text-xs text-slate-300 italic">(Tanda Tangan)</span>
+          </div>
+          <p class="font-extrabold text-slate-900 underline" id="signOnScreenNamaKanan">Hera A.md.Keb</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- VIEW 2: TABEL DANA MASUK / PEMASUKAN -->
+    <div id="viewPemasukan"
+      class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden mb-12 hidden">
+
+      <!-- Table Header Info Bar -->
+      <div
+        class="px-6 py-4 bg-emerald-50/50 border-b border-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h2 class="text-base font-bold text-emerald-950 uppercase tracking-wide flex items-center gap-2">
+            <i class="fa-solid fa-vault text-emerald-600"></i>
+            <span>Daftar Dana Masuk / Pemasukan Kas Klinik</span>
+          </h2>
+          <p class="text-xs text-emerald-700 mt-0.5">
+            Sumber pendanaan operasional dan subsidi klinik
+          </p>
+        </div>
+        <button onclick="openModalTambahPemasukan()"
+          class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-white hover:bg-emerald-100 rounded-lg border border-emerald-300 shadow-sm transition-colors">
+          <i class="fa-solid fa-plus mr-1.5"></i>
+          Tambah Dana Masuk
+        </button>
+      </div>
+
+      <!-- Main Table Pemasukan -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-slate-800 text-white text-xs uppercase tracking-wider">
+              <th scope="col" class="py-3 px-4 w-12 text-center font-bold">No</th>
+              <th scope="col" class="py-3 px-4 w-32 font-bold">Tanggal</th>
+              <th scope="col" class="py-3 px-4 font-bold">Keterangan Sumber Dana</th>
+              <th scope="col" class="py-3 px-4 w-36 font-bold">Kategori</th>
+              <th scope="col" class="py-3 px-4 w-28 text-center font-bold">Metode</th>
+              <th scope="col" class="py-3 px-4 w-44 text-right font-bold">Nominal (Rp)</th>
+              <th scope="col" class="py-3 px-4 w-24 text-center font-bold">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPemasukan" class="divide-y divide-slate-100">
+            <!-- Diisi secara dinamis -->
+          </tbody>
+          <tfoot>
+            <tr class="bg-emerald-50 font-bold text-slate-900 border-t-2 border-emerald-300">
+              <td colspan="5" class="py-3.5 px-4 text-right uppercase tracking-wider text-emerald-900">
+                TOTAL SELURUH PEMASUKAN :
+              </td>
+              <td class="py-3.5 px-4 text-right text-emerald-700 font-extrabold text-base" id="tfootTotalPemasukan">
+                Rp 0
+              </td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">
+      <p class="font-medium text-slate-700 mb-1" id="footerCredit">
+        Sistem Laporan Inventaris & Pengeluaran Klinik • Klinik Aisyiyah Pangkajene
+      </p>
+      <p>Dibangun dengan Node.js, Express, MySQL & Vanilla JavaScript • Siap Online</p>
+    </div>
+  </footer>
+
+  <!-- ==================================================================== -->
+  <!-- MODAL: FORM TRANSAKSI (TAMBAH / EDIT DATA) -->
+  <!-- ==================================================================== -->
+  <div id="modalTransaksi"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div
+      class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden transform transition-all my-8">
+
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div id="modalIconContainer"
+            class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-file-pen" id="modalIcon"></i>
+          </div>
+          <div>
+            <h3 id="modalTransaksiTitle" class="text-base font-bold text-slate-900">
+              Tambah Transaksi Baru
+            </h3>
+            <p class="text-xs text-slate-500">Isi formulir transaksi di bawah ini dengan lengkap</p>
+          </div>
+        </div>
+        <button onclick="closeModalTransaksi()"
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Form Body -->
+      <form id="formTransaksi" onsubmit="submitFormTransaksi(event)" class="p-6 space-y-4">
+        <input type="hidden" id="transaksiId" value="">
+
+        <!-- Segmented Control: Jenis Transaksi -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+            Jenis Transaksi <span class="text-rose-500">*</span>
+          </label>
+          <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
+            <label class="cursor-pointer">
+              <input type="radio" name="inputJenis" value="Pengeluaran" checked class="peer sr-only"
+                onchange="onJenisChange()">
+              <div
+                class="text-center py-2 rounded-lg text-xs font-bold text-slate-600 peer-checked:bg-white peer-checked:text-rose-600 peer-checked:shadow-sm transition-all">
+                <i class="fa-solid fa-arrow-trend-down mr-1"></i> Pengeluaran / Inventaris
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="inputJenis" value="Pemasukan" class="peer sr-only" onchange="onJenisChange()">
+              <div
+                class="text-center py-2 rounded-lg text-xs font-bold text-slate-600 peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm transition-all">
+                <i class="fa-solid fa-arrow-trend-up mr-1"></i> Dana Masuk / Pemasukan
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Tanggal -->
+        <div>
+          <label for="inputTanggal" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+            Tanggal Transaksi <span class="text-rose-500">*</span>
+          </label>
+          <input type="date" id="inputTanggal" required
+            class="w-full text-sm rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3 border transition-colors">
+        </div>
+
+        <!-- Kategori (Dropdown + Datalist Custom) -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="inputKategori" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              Kategori <span class="text-rose-500">*</span>
+            </label>
+            <span class="text-[11px] text-slate-400">Pilih atau ketik kategori baru</span>
+          </div>
+          <input list="listKategori" id="inputKategori" required placeholder="Contoh: ALAT KANTOR, ALAT LISTRIK..."
+            class="w-full text-sm rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3 border transition-colors uppercase">
+          <datalist id="listKategori">
+            <option value="ALAT KANTOR">
+            <option value="ALAT LISTRIK">
+            <option value="ALAT KEBERSIHAN">
+            <option value="TAGIHAN RUTIN">
+            <option value="ALAT MEDIS & HABIS PAKAI">
+            <option value="DANA MASUK">
+          </datalist>
+        </div>
+
+        <!-- Jenis Barang / Uraian -->
+        <div>
+          <label for="inputUraian" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+            Jenis Barang / Uraian Keterangan <span class="text-rose-500">*</span>
+          </label>
+          <input type="text" id="inputUraian" required placeholder="Nama barang atau rincian pembayaran..."
+            class="w-full text-sm rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3 border transition-colors">
+        </div>
+
+        <!-- Grid: Satuan & Metode Pembayaran -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Satuan -->
+          <div>
+            <label for="inputSatuan" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Satuan
+            </label>
+            <input list="listSatuan" id="inputSatuan" placeholder="rim / pak / unit / -"
+              class="w-full text-sm rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3 border transition-colors">
+            <datalist id="listSatuan">
+              <option value="rim">
+              <option value="pak">
+              <option value="satuan">
+              <option value="unit">
+              <option value="buku">
+              <option value="botol">
+              <option value="jerigen">
+              <option value="roll">
+              <option value="set">
+              <option value="meter">
+              <option value="bulan">
+              <option value="-">
+            </datalist>
+          </div>
+
+          <!-- Metode Pembayaran -->
+          <div>
+            <label for="inputMetode" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Metode Pembayaran
+            </label>
+            <select id="inputMetode"
+              class="w-full text-sm rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 py-2.5 px-3 border transition-colors bg-white">
+              <option value="Tunai">Tunai</option>
+              <option value="Transfer">Transfer</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Nominal (Rp) -->
+        <div>
+          <label for="inputNominal" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+            Harga / Biaya Nominal (Rp) <span class="text-rose-500">*</span>
+          </label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">Rp</span>
+            <input type="number" id="inputNominal" required min="1" step="1" placeholder="0"
+              class="w-full text-sm font-bold rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 py-2.5 pl-11 pr-3 border transition-colors">
+          </div>
+          <p id="nominalPreview" class="text-xs text-slate-400 mt-1 italic">Rp 0</p>
+        </div>
+
+        <!-- Tombol Aksi Modal -->
+        <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+          <button type="button" onclick="closeModalTransaksi()"
+            class="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors">
+            Batal
+          </button>
+          <button type="submit" id="btnSubmitTransaksi"
+            class="px-5 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-all">
+            Simpan Transaksi
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- MODAL: PENGATURAN KLINIK & TANDA TANGAN LAPORAN -->
+  <!-- ==================================================================== -->
+  <div id="modalPengaturan"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div
+      class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-xl w-full overflow-hidden transform transition-all my-8">
+
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-sliders"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">
+              Pengaturan Kop & Penandatangan Laporan
+            </h3>
+            <p class="text-xs text-slate-500">Konfigurasi nama unit kerja dan tanda tangan PDF/Excel resmi</p>
+          </div>
+        </div>
+        <button onclick="closeModalPengaturan()"
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Form Pengaturan -->
+      <form id="formPengaturan" onsubmit="submitFormPengaturan(event)" class="p-6 space-y-4">
+
+        <!-- Identitas Utama Klinik -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="cfgNamaKlinik" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Nama Klinik / Unit Kerja
+            </label>
+            <input type="text" id="cfgNamaKlinik" required class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors">
+          </div>
+          <div>
+            <label for="cfgKota" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Kota / Kabupaten
+            </label>
+            <input type="text" id="cfgKota" required class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors">
+          </div>
+        </div>
+
+        <div>
+          <label for="cfgAlamat" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+            Alamat Lengkap
+          </label>
+          <input type="text" id="cfgAlamat" required class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="cfgEmail" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Email Klinik
+            </label>
+            <input type="email" id="cfgEmail" required class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors">
+          </div>
+          <div>
+            <label for="cfgTelepon" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              No. Telepon / HP
+            </label>
+            <input type="text" id="cfgTelepon" required class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors">
+          </div>
+        </div>
+
+        <!-- Blok Penandatangan Kiri (Pimpinan) -->
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-signature text-indigo-600"></i>
+            Penandatangan Kiri (Pimpinan / Mengetahui)
+          </h4>
+          <div>
+            <label for="cfgJabatanKiri" class="block text-xs font-medium text-slate-500 mb-1">Jabatan Kiri</label>
+            <input type="text" id="cfgJabatanKiri" required
+              class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border bg-white">
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label for="cfgNamaKiri" class="block text-xs font-medium text-slate-500 mb-1">Nama Lengkap &
+                Gelar</label>
+              <input type="text" id="cfgNamaKiri" required
+                class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border bg-white">
+            </div>
+            <div>
+              <label for="cfgNipKiri" class="block text-xs font-medium text-slate-500 mb-1">NIP / NBM (Opsional)</label>
+              <input type="text" id="cfgNipKiri"
+                class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border bg-white">
+            </div>
+          </div>
+        </div>
+
+        <!-- Blok Penandatangan Kanan (Pemegang Barang / Admin) -->
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-pen-nib text-indigo-600"></i>
+            Penandatangan Kanan (Pemegang Barang / Pembuat Laporan)
+          </h4>
+          <div>
+            <label for="cfgJabatanKanan" class="block text-xs font-medium text-slate-500 mb-1">Jabatan Kanan</label>
+            <input type="text" id="cfgJabatanKanan" required
+              class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border bg-white">
+          </div>
+          <div>
+            <label for="cfgNamaKanan" class="block text-xs font-medium text-slate-500 mb-1">Nama Lengkap Pemegang
+              Barang</label>
+            <input type="text" id="cfgNamaKanan" required
+              class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border bg-white">
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Modal -->
+        <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+          <button type="button" onclick="closeModalPengaturan()"
+            class="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors">
+            Tutup
+          </button>
+          <button type="submit"
+            class="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-all">
+            Simpan Pengaturan
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ==================================================================== -->
+  <!-- JAVASCRIPT LOGIC (CLIENT SIDE) -->
+  <!-- ==================================================================== -->
+  <script>
+    // Logo Resmi Klinik Pratama Aisyiyah (Base64)
+    const LOGO_AISYIYAH_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAABBCAYAAACO98lFAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAC3cSURBVHhe3Xt3XBVdtuX85r1+/bp7Xs/r6fj16/6CkoPkKDnnnEFEFBNmzDlj+gQRBAQkCCJGECSK5JxREAOYc84K6Jp16qKfnXtm/pujh1tV996qs9fZe+21T9X9b/iz9vHjxz95/dTE/qc+doB/RsEj+CDtcv/DB3z8MIoPH/kqfUjWXr97hkev7+DG4/O49qQR7YNHUd4ex74T5R1bcYa9qnM76rpj0Hf1MO4/qceTp1149WYIw8NPeAZxBdklZWMY4TV4XWlbdOntL5o4II1K2vtHTQLhk3Gf+qf259t/9X0azNFwW1xWvCd7/9GrO+i9WYvi89lIrd6IXWUzsfSwPZYfMcOaY2bYdMIC0fmm2JlvhtgCCyScMsf+IjNkFJoih/1wkQXK64PQ0rEMV64k48GDKrx5fZNnJvBiHOKa7B/GrvrPti/t+NT/whNE+2sf/NRlHxCfEZcXAxCIy1AfxQgGH/cjtzkBW0tmYdFRT0RkmSEy1xRReSZYdtwSq05YYv1Jc2wtMMOOU2bYnW+B+FNWSCy0QOppU2QVGyO3xAhHyoxwrNQQBSV6OF2sj6oqO7Q2T8OlgRg8f9bG670Wg5DGIo3n8zj+vI19YKx9tuGL9k+D8GXjEc6C8ADZ/rvRdzh/rwMxZ9dhep4nQrMtMDnHAhGHrTE3zxILj1hi8TFzLDtBLyAAG/PNsYNGx3Dm4wvNkHyaAJSYI7OMXlA6kQAY43ipEU4SiCJul1Xoo/KMNqrLdVBbYYDWGkdc6F2C50/OMgKfSmP4coh/Ol6x/ZeGf9n+Kid8afif74smxaL0+gH9984jtnoXgjJdEZBhjeAcK4QdtkJErhVmHbbF3CPWmH/cAkvybegNTlhw0AsL0wMxJzEIc+LDMJ99YWIYovZNwsrkQGzL9sXeYx7IKLBF0RlzlFZNRPlZI1RWGKKmUh8Nldpoq9RFB3tXjQWG+pbg5dMajH58KzNV8NEXY/1n2mdO+Gea+Ninzz4bfo7s7hwE5wbD/oAVPLNtEZhjg5BDNgTBEhF51ph9xAkRmZ4I2hMGl3XzYLt4JSbO3gr9iBio+O+Gonc8eyLkPfZCwTMeyt4xMJryPWwjo+ERtQrTNs7Dmr2TkHHMExVnbVBXZUAQdNFcrY32Gm30VuvjXJUW+hvtce/Sbgy/ucaRjfzfg/Dpi3+yLbCly4tdMesg84t24eFlLDu9BtYHHGCXaQ03AuCeYwd/znzQYTuEZbvAPzEE1iuXQW9aNCZMioeSz34o+xyAgl8mFNlV/bKh5puNCX4HELFuNexnx0HRNwOqvllQ8c6Cgncm5DwPQNM/AWYRW+ATtRA7kqagtMwRzTVG6KgjCDV66K/RQX/tBFys0sX1rhl4/ayWIxRASAZINoxtSu3L7U/tb4Ig7UusT/ei8Z9OVXm9Cb6HwmG83xaWWY5wzrSH50F7+OXYwz/LHW4xETCduxaqQQk0NoOGZ9HYTEzwOQg1n2yo+OZA1f+g1JX8sqAbsgtd56ZhY+IiyHnFE5yDUCZASv6ZfJ9g8TuK3tmQJzjq/omwjliDLftmoKzYFefrTTFQq8+uiaF6PQzV6eJGkyte3M5geDwnUYsRC+ISneOXTPy0L5rM5r8LgnTo4zD/kPcJRk73SVgd8IFBmgPMMhxgm+EIh0wHuGc5wzVuMowWrYUiZ06BM67klyMZrCIM5myr0CAlGqfifwDq0owfkva1J+1A/4UgbEuaCUWPBAJGcAIyeB4C6J/O7/H7wjv80nmeLALEzhBynrURu5Mmo/2MLS436OJKvRZuNmjjTqMW7jQY49WNBHwcfShN5GfjhUFSF/vSH6n9BQhfNuEFog1TnCQ350E30QV6++1gdsAelum2BMEB9qleMFw3ByphuyHnncF4joF5+BYo+KZDjQNWCUinUQdpfDqN4ivBUBMeImbaJxP6QTtx/vxkbNw3C3KuiRI4KgRH2Z+d24pjHiO8Q3xHMSCHoXIAupOToe2/FTNXLkJRvjcGGw1xq1Ebdxt18KhRA08bJuLt0C5G8D2aL1K5EHG0k6EiA2LMO9j+JgjSPv8LIJOaj0It3hHq+52gn+YE43R6QqYLzBOCoTl3HQfIeOesf+uRjHVJUahrD4Nx2EYp9lUCZLOnKrZpmCp5QJmzKzhi0qo9cFmwBD3nQrFpXzic5m2CTmgczyXChmHBcyrys4rSOXL5XW577kf4qiUoqNoB49BdBCQDlpPX4VBWOG7Q8AdNWnjSOAEvG9XwoskQb69vpxGPJQCoMxkmwi6ZbZ/aXwXhy/2Tl6qhnuAO5SRHaKU4Q4ehYHDABYa7p0AtYrtkqLKPGGCO5AmTV67E9WseiE6ayrBIgLwnPcAnjTGeIfMIAqJII/UCt+NkeRjST4Wiu9cH+SWeqG8NhM+iNXR38TnyAgGQgZHB82RAwSsLplPXo77JD4Vl86ATEAsFeooyOUcnYAd2xIRjsN4Cz5s18bRZA6/Z3zYZ482NJHwceU1NIRhCMMUPXiCaBII03RIJSntsso3q612c8XDIJzlBdb8LNNNcoEtP0Ns+A8pTdvDiZPEAuqg/3Z4giEGr+sRhX8409Jz3g9OsxQhfswm2Mzbxs+QFfk6NYaJI9teftBnl1c441x+Ic+ed0drlgmd3zTFp+TKMF4YL/uD5FPgd9YA4BK/eDqNJG7A+YRr6LoUiMGoFFAmK4A118oUSgdD0j8GG7dNwo94eL1u08aZFE+9bNfGy1RTv7h+lVe9p4xg3SEDI2hgIQmDwlX9EHhDt1ttHcMuNwh/j7TE+1YUg0BPSnKG9KxQqzOVKBEDEreTiHLAgLcH4yvQM47ClaO30Q9ZRXxSfDUR+xTRo+e+gB6QRrExoB6UgcOk8FFe6o6fPF73n3dDU6YKrl80Rtjwc+mHUD+QSBRqnQBKMip6HrvMRmLXaDe2dgdiVGg4l71ieTxDvAXIM+YfnFR6j6b8HW7aFkxfM8K51AoZb1DHazNDo8MHbF82SbbL2ecY/hQOpg8eEs8io4yOWlyXiV7H2+GOSG8aTC9RTHaAVOwnK07ZL5CbiXMy8iG/hspKbM7fbz9mFFXEzsTPJHl1dbjhz1goPbjoicsNkBC9bAM3APTCfuQ3NPVNw/pwVujrd0dnjgZo2Z/R0W6OxxR8703dDwT0O9pFbELJ0IarrHdHY7Inso/aobfLB9LWTYTNnp8QRssxBviHZCuBUmIp1vXcjiRzzpmMiRlvVCcQEvG5g71/IZHdPMvwLDL7gBOmo7J3yoQ4oJgTid/uc8If9rlBMdoXaXn/Iz91A90+jB/DC7BIAwhuE63JfibFsN30TevrD0NDggtNlzigpd8CF8zbo6HBDMw2csnYlDCZvQHtXCPq7LdHe7oZW9qpaR/RdcEB/nw3mbl0DDe91KK6ahfwiG9y84YIDh8xZUXryfBa4dj0cszYsh7JXhgS+LHMIMqX4EhPCkDMJjUbpkWCMdhhgtEULIyTL1zWCKDNo5id/l4XEZxCEyhLtyfs38DiyAv9rrwN+TzL8Y7Iz5BO9obhsMQFIldKVClOVQF/MhDK78AghbESIqAfsw+akUNy7bo+cPHNUN3oh/7QJBi9aoKvNGnvSJmPpzijkHbPClYt26OhyR0OjO86UOuJKny0uXnaC5+wAhK2ORFePHzrajXCm3hKny12oFi1xuc8ElVWBMJmylcQrdATTLVOpyDpCY4gJUiYJK3inwS9yNYYqfIAWHYw0aGCYyvJlvRdGXp2XgSBDYgwE6Z8MlfTeM/hVjBN+m+iKr/a54etkJ4yLngaF0L1MazlkeqH4RPyLtCe8QEaIEggij3snYPKSCPR0OqCzyxJHC5xQUu2N7nM2uHDOnCWxM24MurJb4u4dekK3D0qrXXG6whFVlXro7nFFcz17sw9a6sxw9Yoj8ktdUFvtghbG+eWLTpi2MgKqvI7wPhXfXIZAriw8yUlSOiVXSHrDOxmbt81lqjTDaJMaRqgs31Vo4+XADhr9TiYV2CQQKCMkVJ6+fwuj1Ej8fK+jBMJ/sX+9xx/jIzdAOTAJxlN2Qifke6aqZNlFORPfuadBntJYUQDAeJTzSETGicUY6LPHlSsmOF1qh6oaX5wotMKlPmtcuuKChvOmONk5EcmNJthQ4oVF+fZYnW+Lrcd1cazJDZ395iRLF1w5zxBocUZBuSPKztoTEDsU0KtyihfAbj7TrxfBl8KAeoIZR1xfmZOiyMlR9DyI71wzoOWzCaWHw0iOWhitYT/DbEHQh593jznC2KLK6BgkWT0V+M1eH/znPlf8murwq0R3jGP1Jx+4D6oBMdiXOw+F5cEkpvn0iF0senZjXcIa2M1eDzWysvO8LdAK/B4ec9YyzoPRyhx9sd+e8WyJypYQ7C52wPxTprBKVEZQoTGMU1WYgfShnqLKwksVfke0YJmtj/ACY5beRijtdsOR026oafEhadqjrsESHd2uJM5FDD3Kc48keiInxDcWNuQiq4id9IpUTtJeeC1agQ3J22E1Kx5T5y3E4zpnjNZqYbiK3lCmg5f9e2gxy2+aLoEgIHnFGiGgYBN+vMeeILjj1wmu+H2cN+QidhBpCh1eLGTFSrR1huLGdV+k503DrHVTcX0oQIrdyPWTcbJsCuKzZkLfdxG27gvBhT47ZgBT5DV4wvuAGX67gwaWGWLacUUsO2OEXc0TUTFogkWFSqi8ZkZhZo6gQ+OwqMIQv4vVgtp+S4SzPD9eZ4/eHkt6hRmyC0JgPHkVnCLXIJ0eNz96CTYnTCI4QVgdv5SEGIWYjBm4POCDupaFsJm1i97wPUoOTsFonQGGz2rjfZk6XtYF4f3rS5LxMhDYam/1Qy41FD8hIf5PesJvyAd/3DCdMZZCpBlzdDkFr3QYhkRjRex85usgtPe4IfuYEc712ODqVXvU19niPI8dYirr6XZCd58ldlZYwD5NA9sbjDC/Qh/bKVwO9xpiZqE+lpVPxJyj47Gp2RIrz+ph3dmJSGCYxDRr41d7daF20AJKiTrwzJ6I422u6Os2ZobxwPbkMNQ0BKCPnNPcZIU718g7Z+ywea87GtuC0HfRj0BEEhCGMYlTnkp25uK5eM4MNFqpgZEyLbwsNsGbaycl2z+DsIP1wY92EIB4V/yCofDbBC98y7pAIjt/kh8JRymAJS1jz2r291i1ZyaOnnBAU5MzKs/aoazSHBd6bdDbZUZGN8cQ+SC11RJ+ebpYVmmEExdNkdpjhIUcwMzj8thSrYKspnGovaiCnhvaKOxQQGKdApaVKCL4+ATykgG0M3UQ026I0FIjGKZoo6if5HrBCJ0dlujtNifnTCSRWiPnqBVOnLDmZPjh4IlAOMxaQH5gKf+5TsmCxeTvUZvjQRnMTFGuhdfFmnjbtR4fhl/JQHj4/iWCTkXjRzHO+DnrhF+zf7VjMuTD4qTUIwkhqYg5TBDSEUAJe2FoFlqbLXD8pBVO5pP8aoUmsEZTow36ztljb60Vvo7RxKpqc+RdtoVxsjwWFGshr2cCHjzRx4dXOmRiPby7qIE35ybgwx1txiQH9lIdrdfUsbJKCx6545DZY4CVzBoOR7RhlWWAIy1WDI2JuHTJDsdPG+LkaRumYRdUVlujtt4GhWdCGbbRkoxWFeW3SOeitvFJwp5d08gLppInvD+tgeflARh5fkUGwvknN6GQMgX/ttcNPycf/DLBF39YvQAKwUKSyhSZtBYwpgnU/ZMxacUiNLSG4vZNS/T32CLvsBEKK11RS12QVGIHkzQ9/CJBFyopGggpNkXEcSX03tHBh+eaGO7Wwf2YCbgZJo8bngq45joe14LkMBj5DZ4d1QSuT8DbZxNQdEEHU/LksI4gpLTqYUGVGSYfNkR1ry9yj1qgtsaT0tsR1bUW5ABz3Lxph6Onp8NuhqhrxrQMx6vGUBYhMT1qNR6etqIa1MHwaS08KzDD8IMzMhAq71zAj3c64Cfx7vgPesEv4r3xzUJWcz4yd5JKYckjWKhIuZkn9UlB0JJZKK+yxY3LFrh52QytbZbIo+jxyLDG7FKGQ7dwYzkSoQLuP9XB6E0NPNingau2iripOQHXNdRwy0EVN4NUcWumCq5PJyCT5TC0iGCcVcUHAlHRr4bZJ1Vw8rIp1jXoQzdFD0tPEABmjPISC1y8YMduwXB0RvDymaxRdlEfZEiGi3QpxJyQ1go+h2BDgdV+xAMfz+jg3WldvM3XxtvzcTIQdrcU4F92O+PfBQjxbvjlbj98N3OztDwmKkRZjUDxIQCQPILbzMmOc77H4dMMC5LWuR4TXL1gjqxGW9gf1EN6lwWyOvWxuEIdA7d18XFIFXeX0Xg9ddyboIUhFzXcjdVhuauOkbvq+PhADR/uK2P4hhYeFivi1gEFPK9TwegzDRzr0kDwMXmsqdVBdK8jLJMmMGNQZpOD2lvN0NBkjVNlPvCOIhH6CA8Qy3OHqBypJMV4pXEfwgSvrTiVMo2zbshwYJV5Sgsv2pfJQIgoisN/j3XBjxM8CII7frUtFArhsZJLCRTFIoeiEEfSkpcICSLMbTmfRJaxOxC0aCFyDtugs9caoczzIScnIIYDnlekg2O9GsAzbdyL08R1XRU8mEBP8JXDi8oJ5AQa/lIBz54o4NJtTTx5rIyRp+OB5yoERhUPWxXx+sZ4cogmZuWPh/9JbaxmFnHM0kQcNcPFAUtmJCfsOxSG8HVroBeSKHmvtBolLc1xvGICBQjsylSQu1mRvi/Vx2iJBt6f0sarMg8ZCB4lW/Eve1zoCQRBaITNEZALEkJEoChCQniBIBixtHUI4zwzoRsag/nbIrF4ewRmr53OlBmAjktWCDiqiwWF8sjpM8XWGsb+Yw28a9TBkI0y7mvo46rTeLxs0MRHGv7h6XcYpBcc7NLFjHwdcoAJntIjHt4ZjxePx2H0oSJG7n+Hj8/lUTygjTlnTbGs3hymOVoIY2ruu0Qx1ueOGRsWwDBsK2xnRcNo8j4oeXHMBEOsZikHCBDEOmc2Jy0by9cuxcsSQ3wgSQ+fYlicMJCBIJcejh/FueLfmWf/I8ENv1k/E/IBByTjFZgVRIpUJQBiHcB72WZM37gGkZuXU+8HorPZCuc6bXH1sgO2HtGAV74hMiiLp+d+h+gKBTK+Fu6vVcIdDR1c09HA0ywtGk8Ansjh/RMVnOpQxKYaI8w9Y47jF81wqJnHOlUorxUw8kwZo0++Y/8G9x+pwy/3Wyys1cemTivYkXBrBzwo1GyQc8warZyEngtTqGFWQD9wA8caAxXPNGYHMYmyOmc8eWL+qnV4TC4ZKdbGcKEW3hVMkIHw77Ee+BH1gSDGn9ETvlo/m+50QDJc3vcAEUyDolcq9EN34Gh5GN69cMKrR1RxLFNr6/TRQz64MeTEtCiW37QxvUADkWX6ONyiiOFr+rjuq4h7KgTBTwWvutQZHt/h0UMl5J/XROngRGwsU8WWelN03LdEdJUeDrUxjNrUcO4GK78n4zH8mP2ZAqJK5bG5zZyKUgumqRo4XG+MGzeEXrDBpXNm6D9nhTNVrjhT7YYTFTMQsGqPlNJFZhNhIc8wDpm5HHcKnfC+RAfvCcLbfE0ZCP9CD/gRVeKP93lRJ7jh92sjoeCfCtOp2xGdNh8HjkdiS2IIFm3zQXSiMdOTFo4cVscxFjxHj+vxVQ/F5ZZYWuQElf0aCC3QxPe9ruhnNnjZqolrLqq4p6SNR8t0MfpAlSAoofbSBKyqt0L5HUdqBz0sqbTAmeu26Lhjhs7rRthJcA+dY+w+lsOHh+PoFYrYUauKtUWK2E0yNKQK3VNmg44eR1aiDmjrsGPV6sDCyx19F7yRdiwAHvMXwCBkHQymbIABJ1AtIBVOgfNxtcAdI6W69ASGw0m9MRDi3PDjva74NwECveGrNfMw3o8pcO33qGqZhd4+H3T0+aKlKwD1zd5obGEl2OCGKtbmFbVuOFvtRfR9MSfPAX7FttjT54joTkfcZlp81UxCdGYqJAiP12jj41NFvKKbx7Qaw/GIMVZRXE06ZYCQ09bYwtA6yMoxrccQ8yiyCph2PxKEkUff4d1TeWSQZ9Y3GGNSvgYUEvQQc9oezY12aGm1R0eHPdWjI871Oki6pbvXE73ngtB/IRADlNEtneEIWbMONr6zMVjgQcGkiRFmh3f5WmMgxLjgJ3vcmR1EOHjgK1aJojRW8Utk6bwbxqHbiehWuMxajLQ8T5QU66G8WAfFdKliEkxxiRFOFppi3mFL2GUoIbtNCZtq9dAyRPfvpCc4KeOmshYeLNXAx/sqePlMBXubdbG30xL72k0wnZoioNAMq2qsEFbEIoqyeXEJleOQNlOkHN4yJN7TE9afUcSeFm0cvWgMi3R1eoIdmuts0Mi03NTsgJZ2Z7S3OUn9RJk3tiZOxebESEQnR2D1nkUwjYiHS/BiXMtnKV06gZ6gTRDGwuGn5ISfxrmTEzzxU5bPv1s3l2kxQ+IEBRKLIgWHuBVmzvDIOj0HvZfmo/xsMI3XRkvVBNy+KtYRHZBUawbLQ4ZYXmsAm0xFpDUo4cM9Q1wNGYe7qlrkBlW87mAB80IBA1fVUEVjSi4aIYWV5rIGK+RccUJkuSFyLjng3HVDvLjH7MAsIeMEFYQeHgenPA0sqLeGdboWDteao6JYFf3nJ7JWsWPdYo2hi5Z4cscC1a3h8Fz6Pca7xUPeM4nckEQ7MhEeuQp3ixwkYhwp1MWbkzoyENSy51Iy0xuYIv8Hi6ffrJ9BMtkPdWE89YCqAMRbbGdCJzgeRuHRmLxiCRrbg9HYHIQzLEsv9Jkj9pgCNEhYyuQFjzx11FwgCb6gStylhFuaDAktFTxJozZgynvHsBi4qYmsenlkkmDDT09EyqAH7I/pk/zsWVCpYYTZ48Pj79jH4cUjZSxm6v02WQu/TTaCdao6OoYcCYAo1uxxa5B1C4u5BdsmI2jZUngt3AC90P0UduKeyCHKf2Y67xwsWbkez0osSYyaeEed8OaErgwE/5IY/GscQSAp/keiG369dQrkQuMlqSwUo/AIaQlNWsXhyViVTfBLgPX0zdAKXI3Jy/2o3Y1w964FTrC4KegzQPU1G1SdU8bzx4p418OQcJXHXXVNXHVRxPMqKsQXzBxMkzcfaSO3XRPLaybC9QR5It8cu+roXQ8nMBQUMPpIniDI4SFT5OVHxqi4ZIC1FZrIaCe499VZWltj0pJgrIpbju0HN8J6TiIUPCmOOEZpJZoTKW77qXPcij4ZWLluPnWCPoYZzu8L1fEqf6IMhNlFCfhRrBN+ss8ZP0siCDtCMC5iNysxSs9PxguVGJDBbZFzxQVyoBUUjznblrOaY23fo4/BK7q4ekcfbYN6rP81kMlU136dGeGZOh4fUsJlY0XcoWS+4iPPCo5APFbB26dyeP5QBY+fTGBW0MKNu6wsX7DIeqSKxwPfUDCNx7OHyqi7qs8KUhFdQ1q4dtcY3RdUcG1QBxcG3LEybioMJy+ny8dysoQ6pFCi10oLwdIygFiVzoaa117sj5uD4XIjhgJBYCp/UxsuA+FAfyXJ0RE/3efGcKBsjvXBt7O3kBdy+GUhl2XSWdxYER4hZKkC82/gqvXMGOHobqMSvGyAuzfNcf6CKY7Xs3ZoM0V0uTKaBqkYGc+iNrgVq4IhAnFLTQuD9sp4vJvVYpsWPt5RI2HKsaZXxsfranheMwE3jn+Hp+flmE2UabQaUuuUsKfBALkEtorfGRo0YuGki7YmXdwYdMCpsxEwCd9JaSyUohg3QaBCFOOX7knQFk2fLSjLDAbOGOBdEctpyvCXnVtkINTfH8BPYzzwMxLjz+O98J8E4uslK2i0KESIJEFQEjqcnqHkm0cAxG207zF3gy/qqrXx4JoFrvSbSitL5WctUdjGsGjWRu91bZy/zYF3c1uU0Y908fKUOm4FK+GmviqGtJVwxXwchrzlMBD4Fc5N+S36or7FxbhvMNynQt5QRc0VLZRxu+myLsr6dZHVQEJts8bZs1a40G2Gu0Nm6GVo7EmzhlXEOlaQVIliJUx4Lscv3QhmWIzjMbfIbbh0wp6lNAEgCC/yDfD+ao4MhCvP78Pw4AL8JNYVP0tk/bDfBV9tmAHF4GRZTBFRIT2lFWUyrMgSR4tD8OyBGwZ6zVBXZ4aKM5bUDq4orbRHa/dEXBzSQc81HWyj6Ak6pgOfw8ooGtDD+9c6+Diojod5Sri9UQV35qjjzmyW0suVcD1uPF43aQGPNPCQRddOGuye9S3WV2rgdK8+hu5oo4+ldU2dJepqHFBVZYE6Zog+8tD9Wy4oqfRF0PIoKHvtlwAQoSwLCY7bMwVRK5fhWSklM0F4ywLq6WlbZp0mGQhvRoYReSYe/7rbHj9hdvifJMffxATi22licYInYxcnUxPSk7W605z1SM32xokCHdQ32KCpww0FpWZoa7TCFYbDVaa9wYv6iD2rhUnicbzrLphapAnL5HFYUaaG9jvGePXaQOKKYbr6MCvGkYesNp/Tq54a4PiAFlWnKpxZi2yv00BclyV1gwaaL6rhMXXGE/JOJ3VGETNKYyNBb7VBeakOw8MdJ86uhnlEEr1V1D6yslpUwJp+8ciKC8WHGlO8K9fBmyKSYm0Yht/ckoEg2v6eYvx0t5OUIn+R6IlfJnrh68UroCg9NSJAEBVkFouQdFhOX4yUHE/09XlxVuxwkrn28oAFbjG3Dw0Y49ZlgtCvhRMdFnDN1oVl+njE1DHFFSnBPk8XttQQAUdUsJoaI2fQCkV3bLGPuX46JbF7njJ82VfWmaD4ignSzpljCfVH5Akt9A7qSiFyZ1ABj26p4fpVA4YftUaZJS6cd0JpuQ2mLA+Bpv9eTpbwAk4gx67AFO88dRPO5ztj9Cw5qlQLr09p4s257fj44d0PIPQ9ugGdzEjKZ2dpyf1XSa74ZgdTZUg8kSQAPukwmRKNNXHh6On3R3efN+IzPVBfa4JHty3R1emACz2s8S/7YHeSuFnigPZeO2TXWsD7oClLbE1srNdHSo8ZEs7ZYlmpJgJz5OGerQCDfXKwPqAK7XQNLKT6yyW/7Kg3xCyqOZ9jppTjaqhotWSBZIC2NjMWbG7MGCa4eVkTj29boYnnzWYl2dzGien3Y30TDrMpW1hSp8uA8EnF+nXT8ZYia4TpdYTe+LLEHK/vlEi2y0D4KLs1Obs8Fj/b44pfMEv8OskJf0jwxncL1pAMD0CP8rmgIhK3bgUityiCJBOF+TuXo7VnKnalhlGgzERyXhRCVy2Dnk8U9h1054DtKKJskVfphLmHHeGXo42wI4p0dT3kDrD0LlFB3oAVFlcaI6PfFgsrTbCx3ZafUcBs1vzBRy2xttAWZfWWjHsrgmCNDXHe8Ji7AKl505F7aip27A/Auf4Q1LVFImjxVOzNDmXqJGHX+yFo6XpWv2mYGLwNbQVBGK1h+XyG3lSqjpdNUzH69qZ0F0oCQbofy1ZypRVfJ/jjl/FO+B3D4r+SXDAuegrkg/fAaOperEpYjmnrlkA7cA9TUSqsZiXDanoMGTiRbpfK12Qousdg8/7VrOQCUVtjgu5uW1TUeCAlzxWV51wRU22BueSHGUeUEZAtD68cJfid0EdwrgqCD6kiKEcVUcWm+J7yuarHHRXVzDhnXKSF1OYafXR0ByN4xVKoe++EybRYqAfFwGn2RkxZuZyl/h7OfAwmr56HU5VzEJcbR72wF6s3LsDLRnOCoI73DIfX5fp4OZROAGSPJIx5Anc/jmKYh91yluM/9zoQBFf8IdEZ3yR4QW7pKkkoKfqlSbyg7C3W72TPE8lRmclLTMxO0jSbvhPpJxfiVLEFydEVRaWWOFbojZoGO+ZzG/SdJ3HemIisSnOc6HTB4XZXJDU4IabYEkU9DjhQpIFbd6zR1W2KK5ds0dnuhOIya5wmKEOXzNHabkovmAkN8ZScl0jZzFpeTOFiXByPWF4XayBawbuhGxwD27DV6CoKxsdGXbwnyQ6fUcOLOj+MvBuQABDtczh8ekap7GonfrfXXboh+3uqx6+T3TAuNhQK07dLF5QezSPbSmt30isHwWOii8d31Pz3ISRqGmfOGXVN5ihlmZ2VZ4XrgySvPjMUlVihuTOQoWKJm0P2uH7JhaW6I6opm+8M2aG90076XlWVDRrqCcRFG9SRJ04UWDMcbCiTLRGxajo0A6gHfGS35EUKVGAXd6UFgUspncSo4R+PlITZeNtChdhAFVrN1Fihh7dXD9DSd9IjSqJ9JkbZLVng5egIZpbuxq9jHPA1U+V37ONTXKG8fjYUQxKkTKEmUo+0kJkJdR9ZLpZWb1hjGE3ahtKzkzh4FkH0ghOFLmhsscPggAku9Dth3uaZiNwUSUDscYku3tNhh3NdTqipMmB6tURl02R4zgtFYs4sKf0NXTJjOjRGS7Mzco+Y4v5NZ+xIngT1gD1SXaNG4MW9BcWATILBSZGAoId4HcDMZYtwq94Jo20EgCC8r6YabQnDyNtrMnv/xBPYxMFP7tH1YBATD0zFb+Pt8F2yO+RTnKG2j2GxYjEvtp9IC2+gmpQ0OT1CEiQZGO+ZiekbV7PU9kfuCbpumzcKipxw66otiiucUVo7AxOnbMSczTNY81tQYeqinDPTSRAqKnVQUa6BpnY/GIesge+iVWjsmIH8QkPcuCyedLHE6VJHnMxnWFydBY9F0ZDzzpSN5ZOO4auocUSIOk9fg65iP3xo08NwMzMCi7KX1SZ4c++UZLt4MOnTzH8OB6nxoAyIj0huy8e3LK+/ZUgoiAe3UpygTu2gspDZgiEgQFAOEA9oCmktOrmBcem5PBURG6fShX1xssQdVUyhXb2T4L1gAZwWUHx57cPCrXNRWOmP9nYjHGX+b+t2JBi6OHXaAFXN4bCI2ErD9iJ8UyxClk7DtetuVKP6GBhwxVby1baUFXCdv5tVofBIsfwvC1Eh5hQJgNnkTSjM9sf7VoZBKyVyC2uUeobCpS008JlkqowDZFsSCDLX+ChliXcSRqN4MfIakYVb8S1LbPlUZ6iwa6W6Qi82ECpUjArS3WrBA7JyWwIiIIfesBdrEqZSRwRh8bYwZobJWPT9Cij5sMQVnEHhYjhlD+bsWIrH9+yRRw3Q3m2P0jId1DROwawN6yl2kmQ845kOXf/dOHA0jNpkNkPLES3tIXCctZTnS5XcX1YgycJRgd5gErYdOWmheNHCWW+hBxCEYUrxV70zMPJG3IoXbVSy91MbA4EwCGDoBuKJz2HxNDtfh57fhveRJRifaAc1hoR2qhMMUh1gFBcE5ci1JCNBjOJJNjEj4sn0LLhGrkZ/vw8SGNO6QZvhNHcn1AOTpPsA0mD5uW/csjB1wwaMvLBD3lFVdHbboLhUGwNX5sA4bJOk8CRvI8BKzDiW06L5+Wi4z5uPgUshiM+ayvcSpHMKThBeqUAiNJm0BWkE4EETAWjSxutmHYYCAWj1kGoEYaSwXQoFbojJFsfGwkEGghQLo3yTu+IxPtHabg/AOjkYSok20CQABmmOMEl3hsW+YGhHrYYSDRQDFmsPGv6JyM6fgUuXAmE1dTVdUwxOEKaYKVkGEWW4HFNayOpNaOycht0pJmhtcUNathNOVS2CHqtTsWgjfZ6epigthmQy1ETxloItSWG4di0IwUsWQ8lDlgXkqWZtwjcgKz0At5om4nGTJl406rAYozRud8Dw41O0RPZMs/SMszDsz0EQnvDpl2XiVYAh8JA2+X7JlUaY7w+EWrINdDIcMTHdCVaZdrBP9oHR6kVQCo0hSbG8pliJzVmEhTGrOTuikiNhkjyF24pHeqXylqlM3Mc0nLQXDpFbELnBEy0dHvDjLNvP3MW0l05j6QHis3yVAUgCljwtk3XLFpTUTMO6hGXSHSUln30IWLgEp08G4GajEe7Xa+Jhgy6eNWriWYsNhu/n0ILXwkzZPPOfMP/zATYJBBECMhDEk79jXsEufuckvcfd0sv1sEoJYEjYwSTDDhYZttJj/i7pbrDaOQXakZugGhjPmUygSkuTvEOQpnQzlIaLx2/VpHT6aaFDPPBxALPW+KOjywMGk1ZDjq4trVnwOwIsmQaQPRshQkmcS84vBebTtlGpfk8xtB3Lt0WivtgZQyTOG0yD9wQIorfYMxPk0oiXY0bL1KFk99gf6YVNFg58V3qgkyDIuswDpCgZ+6b4Qs2NNvgfmgHDFAeYpdvDLtMeLlkO8Mx2hHdqAKzXLYJ66A7OjliAEQaJR+koXmiwZDiJS4pzplPZalUqoqJ90dtNEELXSKEiVoPE0zESz/AcYlFHQfIKguMtHgnIgrpfLPyjonDw8CR01Zjjcr0uBmt1CYQmbtdp4k6jG94+LuSIxS/mZGOXTBYboo29ftqVQJAB8EP/1EgPBEP4BuNJgMF2+dkVLC5eCfMUG1Z+NnA6aMtK0JbFkQ11vzP89gfDas1saHO2VAMTZYAwl0vPFRIEIWyEF0hrlr6ZmLF+Jupap0F3UjSNHfMUAQY/IxSggm8uxhMYee9kGITsQcDiKOxNn4zas07oqzXAQC0JtVYLV2o1cbVGF7e7puLN03ox+h+s/AdN5glftC9BkLaEOwggWFuIR+VFe/D6HlKaU+CZ6QXbTGuCYAf/g3Ysja0wKdcKUw+7YHJqINy3zYDZ4pUEZCdneQ9DZL+0MqUkCM8vVyI9/bBYTN+yg6Ds4zHWJDwmT7BE/Kt4J0ArKBouCzZj1sZIJB30RyUr0tZqI3RU64z9BkobF2o0MVBthvsDG/H+zUVp4MIMqf8TSPwFCF82KSTExtjJhFdIP5pgG/04gqZbTYg6tQgeB+zhfdAKAYesEHrIBtMOW2Om+E3kEUfMOuSKKWkBCIidDdf1i2C3dA2MZ2yERtB69k1QC9qCCX4boBXIY4FrSZgr4L5kLULWRWH53vmIzQpEXoEjKs5aoYb1Rf1ZbbSe1ZFA6KrSRs9ZQwy0TcHjuyfxYfTx2HjFgDlWacT/uP1tEHgiWToR/8S++CO2ZLzxqT199win+k9gztFwBNMbgg6aYkquBSLybDDziCXmHLPAwhM2WHLMDsvYlx91xIpcT6zMCcbqQ1Ow/tB0bM6dju15U7Hj6CTsOe6B9CKKqBJjnKowQclZ0Y1QXmmA6jMGqKvURcMZTbRW6aG73pdFVwqG3w1xJGPmSg9vy8yXUqAYt2ze/mb7myBIYSH9BFCAIZD94XySM0hoj3W2h2/u4WRPLjYWL8CMg46YfNAEEYfNMO+IFaLYlxy1xvLjtlhz0gobCkyx9ZQJdhRZIqbQEvHFJthfMhHpNDynWB+HS41xbOwXsqfLDFBWYSj9SraiQgM1FRPR0RKCa4NxePvmAsczLKZFNl4xujEil46Jjc/9b7e/Gw7iu7KQkJ3oh/CQHRFYS1tfesbbh2i6XI6DLTux7tQ0zGL2EDdqo46InwmbS7+V3sAefdICuwrMEVtghr2Fpkg8bYbUYlMcLJ6I7DITHC5nXVFugIJSAxTxeE2NH3p6V+H2rRM0Xsy8+JWebGw/8JjsVTa6T2MS25/e/+vt74PwD9qnS35uX2wOf3iHey9v4Ny9BuR3JSOlZhEBsJWBcNISW/PNsJMgxJwyJwhmn0HIolccKp2IvFJTltVTWDPsxN37hXj9agAjIy+kc/99k/7P2/8TCP9/NOB/A8PRUiU+cGewAAAAAElFTkSuQmCC';
+
+    // State Global Aplikasi
+    let allTransactions = [];
+    let filteredTransactions = [];
+    let currentTab = 'pengeluaran'; // 'pengeluaran' atau 'pemasukan'
+    let clinicSettings = {
+      nama_klinik: 'KLINIK AISYIYAH PANGKAJENE',
+      alamat: 'Jl. Andi Cammi. No. 17 Pangkajene Kabupaten Sidenreng Rappang, Provinsi Sulawesi Selatan',
+      email: 'klinikaisyiyahpangkajene@gmail.com',
+      telepon: '0878-3117-7100',
+      kota: 'Pangkajene',
+      jabatan_kiri: 'Kepala Klinik',
+      nama_kiri: 'dr. Syah Rizal Syam Pohan',
+      nip_kiri: 'SIP: 139/SIPD/DPMPTSP/11/2022',
+      jabatan_kanan: 'Pemegang Barang',
+      nama_kanan: 'Hera A.md.Keb'
+    };
+
+    // Helper Format Rupiah
+    function formatRupiah(num) {
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(num || 0);
+    }
+
+    // Helper Format Tanggal Indonesia
+    function formatTanggalIndo(dateStr) {
+      if (!dateStr) return '-';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return dateStr;
+      const d = parseInt(parts[2], 10);
+      const mIndex = parseInt(parts[1], 10) - 1;
+      const y = parts[0];
+      const bulanNama = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+      return `${d} ${bulanNama[mIndex]} ${y}`;
+    }
+
+    // Notifikasi Toast
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const isSuccess = type === 'success';
+
+      toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-semibold transition-all duration-300 transform translate-y-3 opacity-0 ${isSuccess
+          ? 'bg-emerald-900 text-white border-emerald-700 shadow-emerald-900/20'
+          : 'bg-rose-900 text-white border-rose-700 shadow-rose-900/20'
+        }`;
+
+      toast.innerHTML = `
+        <i class="fa-solid ${isSuccess ? 'fa-circle-check text-emerald-400' : 'fa-circle-exclamation text-rose-400'} text-base"></i>
+        <span>${message}</span>
+      `;
+
+      container.appendChild(toast);
+
+      // Trigger animation
+      setTimeout(() => {
+        toast.classList.remove('translate-y-3', 'opacity-0');
+      }, 10);
+
+      // Dismiss after 3.5s
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-3');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // ====================================================================
+    // API CALLS & DATA FETCHING
+    // ====================================================================
+
+    // Ambil Data Pengaturan Klinik dari API
+    async function fetchPengaturan() {
+      try {
+        const res = await fetch('/api/pengaturan');
+        const json = await res.json();
+        if (json.success && json.data) {
+          clinicSettings = json.data;
+          updateClinicSettingsUI();
+        }
+      } catch (err) {
+        console.error('Gagal mengambil pengaturan:', err);
+      }
+    }
+
+    // Update Tampilan Berdasarkan Pengaturan Klinik
+    function updateClinicSettingsUI() {
+      const headerTitle = document.getElementById('headerNamaKlinikTitle');
+      if (headerTitle) headerTitle.innerText = clinicSettings.nama_klinik || 'KLINIK AISYIYAH PANGKAJENE';
+
+      const headerAlamat = document.getElementById('headerAlamatKlinik');
+      if (headerAlamat) {
+        headerAlamat.innerHTML = `
+          <i class="fa-solid fa-location-dot text-emerald-600 text-xs"></i>
+          <span>${clinicSettings.alamat || 'Pangkajene, Sulawesi Selatan'}</span>
+        `;
+      }
+
+      const headerKontak = document.getElementById('headerKontakKlinik');
+      if (headerKontak) {
+        headerKontak.innerText = `Email: ${clinicSettings.email || '-'} • Hp. ${clinicSettings.telepon || '-'}`;
+      }
+
+      const logoImg = document.getElementById('headerLogoImg');
+      if (logoImg) logoImg.src = LOGO_AISYIYAH_BASE64;
+
+      const reportLogo = document.getElementById('reportKopLogoImg');
+      if (reportLogo) reportLogo.src = LOGO_AISYIYAH_BASE64;
+
+      const footerCredit = document.getElementById('footerCredit');
+      if (footerCredit) {
+        footerCredit.innerText = `Sistem Laporan Inventaris & Pengeluaran Klinik • ${clinicSettings.nama_klinik}`;
+      }
+
+      // Update Kop Resmi Laporan
+      const reportNama = document.getElementById('reportKopNamaKlinik');
+      if (reportNama) reportNama.innerText = clinicSettings.nama_klinik || 'KLINIK AISYIYAH PANGKAJENE';
+      const reportAlamat = document.getElementById('reportKopAlamatKlinik');
+      if (reportAlamat) reportAlamat.innerText = clinicSettings.alamat || 'Jl. Andi Cammi. No. 17 Pangkajene Kabupaten Sidenreng Rappang, Provinsi Sulawesi Selatan';
+      const reportKontak = document.getElementById('reportKopKontakKlinik');
+      if (reportKontak) reportKontak.innerText = `Email: ${clinicSettings.email || 'klinikaisyiyahpangkajene@gmail.com'} • Hp. ${clinicSettings.telepon || '0878-3117-7100'}`;
+
+      // Update Tanda Tangan Laporan
+      const signJabKiri = document.getElementById('signOnScreenJabatanKiri');
+      if (signJabKiri) signJabKiri.innerText = clinicSettings.jabatan_kiri || 'Kepala Klinik';
+      const signNamaKiri = document.getElementById('signOnScreenNamaKiri');
+      if (signNamaKiri) signNamaKiri.innerText = clinicSettings.nama_kiri || 'dr. Syah Rizal Syam Pohan';
+      const signNipKiri = document.getElementById('signOnScreenNipKiri');
+      if (signNipKiri) signNipKiri.innerText = clinicSettings.nip_kiri || 'SIP: 139/SIPD/DPMPTSP/11/2022';
+
+      const signKotaTgl = document.getElementById('signOnScreenKotaTanggal');
+      const todayIndo = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+      if (signKotaTgl) signKotaTgl.innerText = `${clinicSettings.kota || 'Pangkajene'}, ${todayIndo}`;
+      const signJabKanan = document.getElementById('signOnScreenJabatanKanan');
+      if (signJabKanan) signJabKanan.innerText = clinicSettings.jabatan_kanan || 'Pemegang Barang';
+      const signNamaKanan = document.getElementById('signOnScreenNamaKanan');
+      if (signNamaKanan) signNamaKanan.innerText = clinicSettings.nama_kanan || 'Hera A.md.Keb';
+    }
+
+    // Ambil Semua Transaksi dari Backend
+    async function fetchTransaksi() {
+      try {
+        const res = await fetch('/api/transaksi');
+        const json = await res.json();
+        if (json.success) {
+          allTransactions = json.data;
+          populateFilterOptions();
+          applyFilters();
+        }
+      } catch (err) {
+        console.error('Gagal mengambil transaksi:', err);
+        showToast('Gagal terhubung ke database server', 'error');
+      }
+    }
+
+    // Mengisi Opsi Tahun & Kategori pada Filter
+    function populateFilterOptions() {
+      // Tahun unik dari data
+      const tahunSet = new Set();
+      const kategoriSet = new Set();
+      const currentYear = new Date().getFullYear();
+      tahunSet.add(currentYear);
+
+      allTransactions.forEach(item => {
+        if (item.tanggal) {
+          const yr = item.tanggal.split('-')[0];
+          tahunSet.add(parseInt(yr, 10));
+        }
+        if (item.kategori && item.jenis === 'Pengeluaran') {
+          kategoriSet.add(item.kategori.trim().toUpperCase());
+        }
+      });
+
+      // Filter Tahun
+      const filterTahun = document.getElementById('filterTahun');
+      const selectedTahun = filterTahun.value;
+      const sortedTahun = Array.from(tahunSet).sort((a, b) => b - a);
+
+      let tahunHtml = '<option value="semua">Semua Tahun</option>';
+      sortedTahun.forEach(t => {
+        tahunHtml += `<option value="${t}" ${selectedTahun === String(t) ? 'selected' : ''}>${t}</option>`;
+      });
+      filterTahun.innerHTML = tahunHtml;
+
+      // Filter Kategori
+      const filterKategori = document.getElementById('filterKategori');
+      const selectedKategori = filterKategori.value;
+      const sortedKategori = Array.from(kategoriSet).sort();
+
+      let katHtml = '<option value="semua">Semua Kategori</option>';
+      sortedKategori.forEach(k => {
+        katHtml += `<option value="${k}" ${selectedKategori === k ? 'selected' : ''}>${k}</option>`;
+      });
+      filterKategori.innerHTML = katHtml;
+
+      // Update datalist di modal
+      const datalistKategori = document.getElementById('listKategori');
+      if (datalistKategori) {
+        const defaultCats = ['ALAT KANTOR', 'ALAT LISTRIK', 'ALAT KEBERSIHAN', 'TAGIHAN RUTIN', 'DANA MASUK'];
+        const allCats = Array.from(new Set([...defaultCats, ...sortedKategori]));
+        datalistKategori.innerHTML = allCats.map(c => `<option value="${c}">`).join('');
+      }
+    }
+
+    // ====================================================================
+    // FILTER & KALKULASI RINGKASAN
+    // ====================================================================
+
+    function applyFilters() {
+      const tahun = document.getElementById('filterTahun').value;
+      const bulan = document.getElementById('filterBulan').value;
+      const kategori = document.getElementById('filterKategori').value;
+      const search = document.getElementById('filterSearch').value.toLowerCase().trim();
+
+      filteredTransactions = allTransactions.filter(item => {
+        const itemDate = item.tanggal || '';
+        const parts = itemDate.split('-');
+        const itemYear = parts[0];
+        const itemMonth = parseInt(parts[1], 10);
+
+        if (tahun !== 'semua' && itemYear !== String(tahun)) return false;
+        if (bulan !== 'semua' && itemMonth !== parseInt(bulan, 10)) return false;
+        if (kategori !== 'semua' && item.kategori !== kategori) return false;
+
+        if (search !== '') {
+          const uraian = (item.uraian || '').toLowerCase();
+          const kat = (item.kategori || '').toLowerCase();
+          const met = (item.metode || '').toLowerCase();
+          if (!uraian.includes(search) && !kat.includes(search) && !met.includes(search)) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      // Hitung 3 Ringkasan
+      updateSummaryCards();
+
+      // Render Tabel
+      renderPengeluaranTable();
+      renderPemasukanTable();
+
+      // Update label periode
+      updatePeriodeLabel(tahun, bulan);
+    }
+
+    function updateSummaryCards() {
+      let totalPemasukan = 0;
+      let totalPengeluaran = 0;
+
+      filteredTransactions.forEach(item => {
+        const nominal = parseInt(item.nominal, 10) || 0;
+        if (item.jenis === 'Pemasukan') {
+          totalPemasukan += nominal;
+        } else {
+          totalPengeluaran += nominal;
+        }
+      });
+
+      const sisaSaldo = totalPemasukan - totalPengeluaran;
+
+      document.getElementById('cardTotalPemasukan').innerText = formatRupiah(totalPemasukan);
+      document.getElementById('cardTotalPengeluaran').innerText = formatRupiah(totalPengeluaran);
+      document.getElementById('cardSisaSaldo').innerText = formatRupiah(sisaSaldo);
+
+      // Update footer info
+      document.getElementById('footerGrandTotalPengeluaran').innerText = formatRupiah(totalPengeluaran);
+      document.getElementById('footerSisaSaldo').innerText = formatRupiah(sisaSaldo);
+      document.getElementById('tfootTotalPemasukan').innerText = formatRupiah(totalPemasukan);
+    }
+
+    function updatePeriodeLabel(tahun, bulan) {
+      const labelPeriode = document.getElementById('labelPeriodeLaporan');
+      const bulanNama = [
+        '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+      let txt = 'Tahun Anggaran: ';
+      if (tahun === 'semua') {
+        txt += 'Semua Periode';
+      } else {
+        txt += tahun;
+      }
+      if (bulan !== 'semua') {
+        txt += ` (Bulan ${bulanNama[parseInt(bulan, 10)]})`;
+      }
+      labelPeriode.innerText = txt;
+    }
+
+    // ====================================================================
+    // RENDER TABEL UTAMA (GROUPING PER KATEGORI + SUB TOTAL + GRAND TOTAL)
+    // ====================================================================
+
+    function renderPengeluaranTable() {
+      const tbody = document.getElementById('tbodyPengeluaran');
+      const pengeluaranItems = filteredTransactions.filter(i => i.jenis === 'Pengeluaran');
+
+      document.getElementById('badgeJumlahItemPengeluaran').innerText = `${pengeluaranItems.length} Item Terdata`;
+
+      if (pengeluaranItems.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-12 text-center text-slate-400">
+              <i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-300"></i>
+              <p class="font-medium text-slate-600">Tidak ada data transaksi pengeluaran</p>
+              <p class="text-xs text-slate-400 mt-1">Coba sesuaikan filter atau tambahkan transaksi baru</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      // Grouping per Kategori
+      const groups = {};
+      pengeluaranItems.forEach(item => {
+        const kat = (item.kategori || 'LAIN-LAIN').trim().toUpperCase();
+        if (!groups[kat]) {
+          groups[kat] = [];
+        }
+        groups[kat].push(item);
+      });
+
+      let html = '';
+      let grandTotal = 0;
+
+      // Iterasi setiap kategori
+      Object.keys(groups).sort().forEach(kategori => {
+        const items = groups[kategori];
+        let subTotal = 0;
+
+        // Baris Sub-Header Kategori (Tebal & Menonjol)
+        html += `
+          <tr class="bg-slate-100/90 border-t-2 border-b border-slate-300">
+            <td colspan="7" class="py-2.5 px-4 font-bold text-slate-800 tracking-wide text-xs uppercase flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span>
+              <span>Kategori: ${kategori}</span>
+              <span class="text-[11px] font-normal text-slate-500 lowercase">(${items.length} item)</span>
+            </td>
+          </tr>
+        `;
+
+        // Baris Item dalam Kategori (Nomor urut di-reset 1, 2, 3...)
+        items.forEach((item, index) => {
+          const nominal = parseInt(item.nominal, 10) || 0;
+          subTotal += nominal;
+          grandTotal += nominal;
+
+          const isEven = index % 2 === 0;
+          const bgClass = isEven ? 'bg-white' : 'bg-slate-50/50';
+
+          html += `
+            <tr class="${bgClass} hover:bg-emerald-50/40 transition-colors border-b border-slate-100">
+              <td class="py-2.5 px-4 text-center font-medium text-slate-600 text-xs">${index + 1}</td>
+              <td class="py-2.5 px-4 text-slate-700 whitespace-nowrap text-xs font-mono">${formatTanggalIndo(item.tanggal)}</td>
+              <td class="py-2.5 px-4 text-slate-900 font-medium">
+                ${escapeHtml(item.uraian)}
+              </td>
+              <td class="py-2.5 px-4 text-center text-slate-600 text-xs">${escapeHtml(item.satuan || '-')}</td>
+              <td class="py-2.5 px-4 text-center">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${item.metode === 'Transfer' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+            }">
+                  ${item.metode}
+                </span>
+              </td>
+              <td class="py-2.5 px-4 text-right font-semibold text-slate-800 whitespace-nowrap">
+                ${formatRupiah(nominal)}
+              </td>
+              <td class="py-2.5 px-4 text-center whitespace-nowrap">
+                <div class="inline-flex items-center gap-1.5">
+                  <button onclick="editTransaksi(${item.id})" title="Edit" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-700 text-slate-600 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-pen text-xs"></i>
+                  </button>
+                  <button onclick="hapusTransaksi(${item.id})" title="Hapus" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-100 hover:text-rose-700 text-slate-600 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+
+        // Baris Sub-Total "Jumlah" Khusus Kategori Ini
+        html += `
+          <tr class="bg-emerald-50/60 font-bold border-b-2 border-emerald-200 text-slate-900">
+            <td colspan="5" class="py-2.5 px-4 text-right uppercase tracking-wider text-xs text-emerald-900">
+              Jumlah (${kategori}) :
+            </td>
+            <td class="py-2.5 px-4 text-right text-emerald-800 font-bold whitespace-nowrap">
+              ${formatRupiah(subTotal)}
+            </td>
+            <td></td>
+          </tr>
+        `;
+      });
+
+      // Baris "JUMLAH TOTAL" di Paling Bawah Setelah Seluruh Kategori Selesai
+      html += `
+        <tr class="bg-slate-800 text-white font-extrabold text-sm border-t-4 border-slate-900 shadow-inner">
+          <td colspan="5" class="py-4 px-6 text-right uppercase tracking-wider">
+            JUMLAH TOTAL :
+          </td>
+          <td class="py-4 px-4 text-right text-base text-white font-extrabold whitespace-nowrap">
+            ${formatRupiah(grandTotal)}
+          </td>
+          <td></td>
+        </tr>
+      `;
+
+      tbody.innerHTML = html;
+    }
+
+    // ====================================================================
+    // RENDER TABEL PEMASUKAN / DANA MASUK
+    // ====================================================================
+
+    function renderPemasukanTable() {
+      const tbody = document.getElementById('tbodyPemasukan');
+      const pemasukanItems = filteredTransactions.filter(i => i.jenis === 'Pemasukan');
+
+      if (pemasukanItems.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-12 text-center text-slate-400">
+              <i class="fa-solid fa-hand-holding-dollar text-3xl mb-2 text-slate-300"></i>
+              <p class="font-medium text-slate-600">Belum ada riwayat dana masuk pada periode ini</p>
+              <button onclick="openModalTambahPemasukan()" class="mt-3 inline-flex items-center px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100">
+                + Catat Dana Masuk
+              </button>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      let html = '';
+      pemasukanItems.forEach((item, index) => {
+        const nominal = parseInt(item.nominal, 10) || 0;
+        const isEven = index % 2 === 0;
+        const bgClass = isEven ? 'bg-white' : 'bg-slate-50/50';
+
+        html += `
+          <tr class="${bgClass} hover:bg-emerald-50/30 transition-colors">
+            <td class="py-3 px-4 text-center font-medium text-slate-600 text-xs">${index + 1}</td>
+            <td class="py-3 px-4 text-slate-700 whitespace-nowrap text-xs font-mono">${formatTanggalIndo(item.tanggal)}</td>
+            <td class="py-3 px-4 text-slate-900 font-semibold">${escapeHtml(item.uraian)}</td>
+            <td class="py-3 px-4 text-slate-600 text-xs uppercase">${escapeHtml(item.kategori || 'DANA MASUK')}</td>
+            <td class="py-3 px-4 text-center">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${item.metode === 'Transfer' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+          }">
+                ${item.metode}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right font-bold text-emerald-700 whitespace-nowrap">
+              ${formatRupiah(nominal)}
+            </td>
+            <td class="py-3 px-4 text-center whitespace-nowrap">
+              <div class="inline-flex items-center gap-1.5">
+                <button onclick="editTransaksi(${item.id})" title="Edit" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-700 text-slate-600 flex items-center justify-center transition-colors">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+                <button onclick="hapusTransaksi(${item.id})" title="Hapus" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-100 hover:text-rose-700 text-slate-600 flex items-center justify-center transition-colors">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // Tab Switcher
+    function switchTab(tab) {
+      currentTab = tab;
+      const viewPengeluaran = document.getElementById('viewPengeluaran');
+      const viewPemasukan = document.getElementById('viewPemasukan');
+      const tabPengeluaranBtn = document.getElementById('tabPengeluaranBtn');
+      const tabPemasukanBtn = document.getElementById('tabPemasukanBtn');
+
+      if (tab === 'pengeluaran') {
+        viewPengeluaran.classList.remove('hidden');
+        viewPemasukan.classList.add('hidden');
+        tabPengeluaranBtn.className = 'px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm';
+        tabPemasukanBtn.className = 'px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900';
+      } else {
+        viewPengeluaran.classList.add('hidden');
+        viewPemasukan.classList.remove('hidden');
+        tabPemasukanBtn.className = 'px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all bg-white text-emerald-800 shadow-sm';
+        tabPengeluaranBtn.className = 'px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900';
+      }
+    }
+
+    // ====================================================================
+    // FORM CRUD TRANSAKSI
+    // ====================================================================
+
+    function openModalTambah() {
+      document.getElementById('transaksiId').value = '';
+      document.getElementById('formTransaksi').reset();
+
+      // Default tanggal hari ini
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('inputTanggal').value = today;
+
+      // Default jenis Pengeluaran
+      document.querySelector('input[name="inputJenis"][value="Pengeluaran"]').checked = true;
+      onJenisChange();
+
+      document.getElementById('modalTransaksiTitle').innerText = 'Tambah Transaksi Baru';
+      document.getElementById('btnSubmitTransaksi').innerText = 'Simpan Transaksi';
+      document.getElementById('nominalPreview').innerText = 'Rp 0';
+
+      const modal = document.getElementById('modalTransaksi');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function openModalTambahPemasukan() {
+      openModalTambah();
+      document.querySelector('input[name="inputJenis"][value="Pemasukan"]').checked = true;
+      document.getElementById('inputKategori').value = 'DANA MASUK';
+      document.getElementById('inputSatuan').value = '-';
+      onJenisChange();
+    }
+
+    function closeModalTransaksi() {
+      const modal = document.getElementById('modalTransaksi');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function onJenisChange() {
+      const selectedJenis = document.querySelector('input[name="inputJenis"]:checked').value;
+      const modalIconContainer = document.getElementById('modalIconContainer');
+      const inputSatuan = document.getElementById('inputSatuan');
+      const inputKategori = document.getElementById('inputKategori');
+
+      if (selectedJenis === 'Pemasukan') {
+        modalIconContainer.className = 'w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold';
+        if (!inputKategori.value || inputKategori.value === 'ALAT KANTOR') {
+          inputKategori.value = 'DANA MASUK';
+        }
+        if (!inputSatuan.value) {
+          inputSatuan.value = '-';
+        }
+      } else {
+        modalIconContainer.className = 'w-9 h-9 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold';
+        if (inputKategori.value === 'DANA MASUK') {
+          inputKategori.value = 'ALAT KANTOR';
+        }
+      }
+    }
+
+    // Real-time preview format Rupiah di form
+    document.getElementById('inputNominal').addEventListener('input', function (e) {
+      const val = parseInt(e.target.value, 10);
+      document.getElementById('nominalPreview').innerText = val ? formatRupiah(val) : 'Rp 0';
+    });
+
+    // Simpan Transaksi (POST atau PUT)
+    async function submitFormTransaksi(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('transaksiId').value;
+      const tanggal = document.getElementById('inputTanggal').value;
+      const jenis = document.querySelector('input[name="inputJenis"]:checked').value;
+      const kategori = document.getElementById('inputKategori').value.trim().toUpperCase();
+      const uraian = document.getElementById('inputUraian').value.trim();
+      const satuan = document.getElementById('inputSatuan').value.trim() || '-';
+      const nominal = parseInt(document.getElementById('inputNominal').value, 10) || 0;
+      const metode = document.getElementById('inputMetode').value;
+
+      if (!tanggal || !kategori || !uraian || nominal <= 0) {
+        showToast('Lengkapi tanggal, kategori, uraian, dan nominal yang valid', 'error');
+        return;
+      }
+
+      const payload = { tanggal, jenis, kategori, uraian, satuan, nominal, metode };
+
+      try {
+        let res;
+        if (id) {
+          // Mode Edit (PUT)
+          res = await fetch(`/api/transaksi/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          // Mode Tambah (POST)
+          res = await fetch('/api/transaksi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+
+        const json = await res.json();
+        if (json.success) {
+          showToast(id ? 'Transaksi berhasil diperbarui' : 'Transaksi baru berhasil disimpan');
+          closeModalTransaksi();
+          await fetchTransaksi();
+        } else {
+          showToast(json.message || 'Gagal menyimpan transaksi', 'error');
+        }
+      } catch (err) {
+        console.error('Error simpan transaksi:', err);
+        showToast('Terjadi kesalahan jaringan', 'error');
+      }
+    }
+
+    // Edit Transaksi (Load data ke Form)
+    function editTransaksi(id) {
+      const item = allTransactions.find(t => t.id === id);
+      if (!item) return;
+
+      document.getElementById('transaksiId').value = item.id;
+      document.getElementById('inputTanggal').value = item.tanggal;
+
+      const radioJenis = document.querySelector(`input[name="inputJenis"][value="${item.jenis}"]`);
+      if (radioJenis) radioJenis.checked = true;
+      onJenisChange();
+
+      document.getElementById('inputKategori').value = item.kategori;
+      document.getElementById('inputUraian').value = item.uraian;
+      document.getElementById('inputSatuan').value = item.satuan || '-';
+      document.getElementById('inputNominal').value = item.nominal;
+      document.getElementById('nominalPreview').innerText = formatRupiah(item.nominal);
+      document.getElementById('inputMetode').value = item.metode || 'Tunai';
+
+      document.getElementById('modalTransaksiTitle').innerText = `Edit Transaksi #${item.id}`;
+      document.getElementById('btnSubmitTransaksi').innerText = 'Perbarui Transaksi';
+
+      const modal = document.getElementById('modalTransaksi');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    // Hapus Transaksi (DELETE)
+    async function hapusTransaksi(id) {
+      const item = allTransactions.find(t => t.id === id);
+      const nama = item ? item.uraian : 'transaksi ini';
+
+      if (!confirm(`Apakah Anda yakin ingin menghapus "${nama}"?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/transaksi/${id}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) {
+          showToast('Data transaksi berhasil dihapus');
+          await fetchTransaksi();
+        } else {
+          showToast(json.message || 'Gagal menghapus transaksi', 'error');
+        }
+      } catch (err) {
+        console.error('Error hapus transaksi:', err);
+        showToast('Gagal menghapus transaksi', 'error');
+      }
+    }
+
+    // ====================================================================
+    // MODAL PENGATURAN KLINIK
+    // ====================================================================
+
+    function openModalPengaturan() {
+      document.getElementById('cfgNamaKlinik').value = clinicSettings.nama_klinik || 'KLINIK AISYIYAH PANGKAJENE';
+      document.getElementById('cfgKota').value = clinicSettings.kota || 'Pangkajene';
+      if (document.getElementById('cfgAlamat')) document.getElementById('cfgAlamat').value = clinicSettings.alamat || 'Jl. Andi Cammi. No. 17 Pangkajene Kabupaten Sidenreng Rappang, Provinsi Sulawesi Selatan';
+      if (document.getElementById('cfgEmail')) document.getElementById('cfgEmail').value = clinicSettings.email || 'klinikaisyiyahpangkajene@gmail.com';
+      if (document.getElementById('cfgTelepon')) document.getElementById('cfgTelepon').value = clinicSettings.telepon || '0878-3117-7100';
+      document.getElementById('cfgJabatanKiri').value = clinicSettings.jabatan_kiri || 'Kepala Klinik';
+      document.getElementById('cfgNamaKiri').value = clinicSettings.nama_kiri || 'dr. Syah Rizal Syam Pohan';
+      document.getElementById('cfgNipKiri').value = clinicSettings.nip_kiri || 'SIP: 139/SIPD/DPMPTSP/11/2022';
+      document.getElementById('cfgJabatanKanan').value = clinicSettings.jabatan_kanan || 'Pemegang Barang';
+      document.getElementById('cfgNamaKanan').value = clinicSettings.nama_kanan || 'Hera A.md.Keb';
+
+      const modal = document.getElementById('modalPengaturan');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModalPengaturan() {
+      const modal = document.getElementById('modalPengaturan');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function submitFormPengaturan(e) {
+      e.preventDefault();
+
+      const payload = {
+        nama_klinik: document.getElementById('cfgNamaKlinik').value.trim(),
+        alamat: document.getElementById('cfgAlamat') ? document.getElementById('cfgAlamat').value.trim() : clinicSettings.alamat,
+        email: document.getElementById('cfgEmail') ? document.getElementById('cfgEmail').value.trim() : clinicSettings.email,
+        telepon: document.getElementById('cfgTelepon') ? document.getElementById('cfgTelepon').value.trim() : clinicSettings.telepon,
+        kota: document.getElementById('cfgKota').value.trim(),
+        jabatan_kiri: document.getElementById('cfgJabatanKiri').value.trim(),
+        nama_kiri: document.getElementById('cfgNamaKiri').value.trim(),
+        nip_kiri: document.getElementById('cfgNipKiri').value.trim(),
+        jabatan_kanan: document.getElementById('cfgJabatanKanan').value.trim(),
+        nama_kanan: document.getElementById('cfgNamaKanan').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/pengaturan', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          clinicSettings = { ...clinicSettings, ...payload };
+          updateClinicSettingsUI();
+          showToast('Pengaturan klinik berhasil disimpan');
+          closeModalPengaturan();
+        } else {
+          showToast(json.message || 'Gagal menyimpan pengaturan', 'error');
+        }
+      } catch (err) {
+        console.error('Error simpan pengaturan:', err);
+        showToast('Gagal menyimpan pengaturan klinik', 'error');
+      }
+    }
+
+    // ====================================================================
+    // FITUR UNDUH LAPORAN EXCEL (.XLSX) RESMI
+    // ====================================================================
+
+    async function exportToExcel() {
+      const tahun = document.getElementById('filterTahun').value;
+      const bulan = document.getElementById('filterBulan').value;
+      const pengeluaranItems = filteredTransactions.filter(i => i.jenis === 'Pengeluaran');
+
+      const bulanNama = [
+        '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+      let periodeTxt = tahun === 'semua' ? 'SEMUA PERIODE' : `TAHUN ANGGARAN ${tahun}`;
+      if (bulan !== 'semua') {
+        periodeTxt += ` (BULAN ${bulanNama[parseInt(bulan, 10)].toUpperCase()})`;
+      }
+
+      const cleanClinicName = (clinicSettings.nama_klinik || 'Klinik').replace(/[^a-zA-Z0-9]/g, '_');
+      const fileName = `Laporan_Inventaris_${cleanClinicName}_${tahun}.xlsx`;
+
+      // Jika pustaka ExcelJS tersedia, buat file Excel dengan LOGO ASLI tersemat di worksheet!
+      if (typeof ExcelJS !== 'undefined') {
+        try {
+          const wb = new ExcelJS.Workbook();
+          const ws = wb.addWorksheet('Laporan Inventaris', {
+            views: [{ showGridLines: true }]
+          });
+
+          // Sematkan Logo Resmi Aisyiyah ke dalam Excel
+          try {
+            const logoId = wb.addImage({
+              base64: LOGO_AISYIYAH_BASE64,
+              extension: 'png'
+            });
+            ws.addImage(logoId, {
+              tl: { col: 0.15, row: 0.15 },
+              ext: { width: 56, height: 56 }
+            });
+          } catch (imgErr) {
+            console.warn('Gagal menyematkan gambar ke ExcelJS:', imgErr);
+          }
+
+          // Tinggi Baris Kop
+          ws.getRow(1).height = 22;
+          ws.getRow(2).height = 16;
+          ws.getRow(3).height = 16;
+          ws.getRow(4).height = 8;
+          ws.getRow(5).height = 20;
+          ws.getRow(6).height = 18;
+          ws.getRow(7).height = 10;
+
+          // Kop Teks (Kolom B-F)
+          ws.mergeCells('B1:F1');
+          const cellNama = ws.getCell('B1');
+          cellNama.value = (clinicSettings.nama_klinik || 'KLINIK AISYIYAH PANGKAJENE').toUpperCase();
+          cellNama.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FF0F172A' } };
+          cellNama.alignment = { horizontal: 'center', vertical: 'middle' };
+
+          ws.mergeCells('B2:F2');
+          const cellAlamat = ws.getCell('B2');
+          cellAlamat.value = clinicSettings.alamat || 'Jl. Andi Cammi. No. 17 Pangkajene Kabupaten Sidenreng Rappang, Provinsi Sulawesi Selatan';
+          cellAlamat.font = { name: 'Calibri', size: 9, color: { argb: 'FF334155' } };
+          cellAlamat.alignment = { horizontal: 'center', vertical: 'middle' };
+
+          ws.mergeCells('B3:F3');
+          const cellKontak = ws.getCell('B3');
+          cellKontak.value = `Email: ${clinicSettings.email || 'klinikaisyiyahpangkajene@gmail.com'}   Hp. ${clinicSettings.telepon || '0878-3117-7100'}`;
+          cellKontak.font = { name: 'Calibri', size: 9, color: { argb: 'FF334155' } };
+          cellKontak.alignment = { horizontal: 'center', vertical: 'middle' };
+
+          // Garis Pemisah Kop (Row 4)
+          ws.mergeCells('A4:F4');
+          const sepCell = ws.getCell('A4');
+          sepCell.border = { bottom: { style: 'medium', color: { argb: 'FF0F172A' } } };
+
+          // Judul Laporan (Row 5 & 6)
+          ws.mergeCells('A5:F5');
+          const cellJudul = ws.getCell('A5');
+          cellJudul.value = 'LAPORAN INVENTARIS DAN PENGELUARAN OPERASIONAL';
+          cellJudul.font = { name: 'Calibri', size: 12, bold: true, color: { argb: 'FF0F172A' } };
+          cellJudul.alignment = { horizontal: 'center', vertical: 'middle' };
+
+          ws.mergeCells('A6:F6');
+          const cellPeriode = ws.getCell('A6');
+          cellPeriode.value = `PERIODE : ${periodeTxt}`;
+          cellPeriode.font = { name: 'Calibri', size: 10, bold: true, italic: true, color: { argb: 'FF047857' } };
+          cellPeriode.alignment = { horizontal: 'center', vertical: 'middle' };
+
+          // Lebar Kolom
+          ws.columns = [
+            { key: 'no', width: 6 },
+            { key: 'tgl', width: 16 },
+            { key: 'uraian', width: 44 },
+            { key: 'satuan', width: 12 },
+            { key: 'metode', width: 14 },
+            { key: 'nominal', width: 24 }
+          ];
+
+          // 3. Header Kolom Tabel (Row 8)
+          let r = 8;
+          const headers = ['No', 'Tanggal', 'Jenis Barang / Uraian', 'Satuan', 'Metode', 'Harga / Nominal (Rp)'];
+          const headerRow = ws.getRow(r);
+          headerRow.height = 24;
+          headers.forEach((h, idx) => {
+            const cell = headerRow.getCell(idx + 1);
+            cell.value = h;
+            cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            cell.border = {
+              top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+              bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+              left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+              right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+            };
+          });
+          r++;
+
+          // 4. Data Grouping Kategori
+          const groups = {};
+          pengeluaranItems.forEach(item => {
+            const kat = (item.kategori || 'LAIN-LAIN').trim().toUpperCase();
+            if (!groups[kat]) groups[kat] = [];
+            groups[kat].push(item);
+          });
+
+          let grandTotal = 0;
+          const borderThin = {
+            top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+            bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+            left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+            right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+          };
+
+          Object.keys(groups).sort().forEach(kat => {
+            const items = groups[kat];
+            let subTotal = 0;
+
+            // Sub-header Kategori
+            ws.mergeCells(`A${r}:F${r}`);
+            const catCell = ws.getCell(`A${r}`);
+            catCell.value = `  KATEGORI: ${kat}`;
+            catCell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+            catCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
+            catCell.alignment = { horizontal: 'left', vertical: 'middle' };
+            for (let c = 1; c <= 6; c++) ws.getRow(r).getCell(c).border = borderThin;
+            ws.getRow(r).height = 22;
+            r++;
+
+            // Items
+            items.forEach((item, idx) => {
+              const nom = parseInt(item.nominal, 10) || 0;
+              subTotal += nom;
+              grandTotal += nom;
+
+              const itemRow = ws.getRow(r);
+              itemRow.height = 20;
+              const bg = idx % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC';
+
+              const c1 = itemRow.getCell(1); c1.value = idx + 1; c1.alignment = { horizontal: 'center', vertical: 'middle' };
+              const c2 = itemRow.getCell(2); c2.value = item.tanggal; c2.alignment = { horizontal: 'center', vertical: 'middle' };
+              const c3 = itemRow.getCell(3); c3.value = item.uraian; c3.alignment = { horizontal: 'left', vertical: 'middle' };
+              const c4 = itemRow.getCell(4); c4.value = item.satuan || '-'; c4.alignment = { horizontal: 'center', vertical: 'middle' };
+              const c5 = itemRow.getCell(5); c5.value = item.metode; c5.alignment = { horizontal: 'center', vertical: 'middle' };
+              const c6 = itemRow.getCell(6); c6.value = nom; c6.numFmt = '"Rp" #,##0'; c6.font = { name: 'Calibri', size: 9, bold: true }; c6.alignment = { horizontal: 'right', vertical: 'middle' };
+
+              for (let c = 1; c <= 6; c++) {
+                const cell = itemRow.getCell(c);
+                cell.font = Object.assign({ name: 'Calibri', size: 9 }, cell.font || {});
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+                cell.border = borderThin;
+              }
+              r++;
+            });
+
+            // Sub-Total Kategori
+            ws.mergeCells(`A${r}:E${r}`);
+            const subLabel = ws.getCell(`A${r}`);
+            subLabel.value = `Jumlah (${kat}) :`;
+            subLabel.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF065F46' } };
+            subLabel.alignment = { horizontal: 'right', vertical: 'middle' };
+
+            const subVal = ws.getCell(`F${r}`);
+            subVal.value = subTotal;
+            subVal.numFmt = '"Rp" #,##0';
+            subVal.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF065F46' } };
+            subVal.alignment = { horizontal: 'right', vertical: 'middle' };
+
+            for (let c = 1; c <= 6; c++) {
+              const cell = ws.getRow(r).getCell(c);
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFECFDF5' } };
+              cell.border = borderThin;
+            }
+            ws.getRow(r).height = 22;
+            r++;
+          });
+
+          // Grand Total
+          ws.mergeCells(`A${r}:E${r}`);
+          const gtLabel = ws.getCell(`A${r}`);
+          gtLabel.value = 'JUMLAH TOTAL PENGELUARAN & INVENTARIS :';
+          gtLabel.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+          gtLabel.alignment = { horizontal: 'right', vertical: 'middle' };
+
+          const gtVal = ws.getCell(`F${r}`);
+          gtVal.value = grandTotal;
+          gtVal.numFmt = '"Rp" #,##0';
+          gtVal.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+          gtVal.alignment = { horizontal: 'right', vertical: 'middle' };
+
+          for (let c = 1; c <= 6; c++) {
+            const cell = ws.getRow(r).getCell(c);
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+            cell.border = {
+              top: { style: 'medium', color: { argb: 'FF0F172A' } },
+              bottom: { style: 'double', color: { argb: 'FF0F172A' } },
+              left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+              right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+            };
+          }
+          ws.getRow(r).height = 26;
+          r += 2;
+
+          // 5. Rekapitulasi Kas & Saldo
+          let totalPemasukan = 0;
+          filteredTransactions.forEach(item => {
+            if (item.jenis === 'Pemasukan') totalPemasukan += (parseInt(item.nominal, 10) || 0);
+          });
+          const sisaSaldo = totalPemasukan - grandTotal;
+
+          ws.mergeCells(`B${r}:F${r}`);
+          const rkHeader = ws.getCell(`B${r}`);
+          rkHeader.value = 'REKAPITULASI KAS & OPERASIONAL';
+          rkHeader.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+          rkHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+          rkHeader.alignment = { horizontal: 'center', vertical: 'middle' };
+          for (let c = 2; c <= 6; c++) ws.getRow(r).getCell(c).border = borderThin;
+          ws.getRow(r).height = 22;
+          r++;
+
+          // Pemasukan
+          ws.mergeCells(`B${r}:E${r}`);
+          ws.getCell(`B${r}`).value = 'Total Pemasukan / Dana Kas';
+          ws.getCell(`F${r}`).value = totalPemasukan;
+          ws.getCell(`F${r}`).numFmt = '"Rp" #,##0';
+          ws.getCell(`F${r}`).font = { name: 'Calibri', size: 9, bold: true, color: { argb: 'FF047857' } };
+          ws.getCell(`F${r}`).alignment = { horizontal: 'right', vertical: 'middle' };
+          for (let c = 2; c <= 6; c++) ws.getRow(r).getCell(c).border = borderThin;
+          ws.getRow(r).height = 20;
+          r++;
+
+          // Pengeluaran
+          ws.mergeCells(`B${r}:E${r}`);
+          ws.getCell(`B${r}`).value = 'Jumlah Total Pengeluaran';
+          ws.getCell(`F${r}`).value = grandTotal;
+          ws.getCell(`F${r}`).numFmt = '"Rp" #,##0';
+          ws.getCell(`F${r}`).font = { name: 'Calibri', size: 9, bold: true, color: { argb: 'FFB91C1C' } };
+          ws.getCell(`F${r}`).alignment = { horizontal: 'right', vertical: 'middle' };
+          for (let c = 2; c <= 6; c++) ws.getRow(r).getCell(c).border = borderThin;
+          ws.getRow(r).height = 20;
+          r++;
+
+          // Sisa Saldo
+          ws.mergeCells(`B${r}:E${r}`);
+          const salLabel = ws.getCell(`B${r}`);
+          salLabel.value = 'Sisa Saldo Kas Klinik';
+          salLabel.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1D4ED8' } };
+          const salVal = ws.getCell(`F${r}`);
+          salVal.value = sisaSaldo;
+          salVal.numFmt = '"Rp" #,##0';
+          salVal.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1D4ED8' } };
+          salVal.alignment = { horizontal: 'right', vertical: 'middle' };
+          for (let c = 2; c <= 6; c++) {
+            const cell = ws.getRow(r).getCell(c);
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFF6FF' } };
+            cell.border = borderThin;
+          }
+          ws.getRow(r).height = 22;
+          r += 2;
+
+          // 6. Blok Tanda Tangan
+          const todayIndo = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+          ws.mergeCells(`B${r}:C${r}`);
+          const signLeft1 = ws.getCell(`B${r}`);
+          signLeft1.value = clinicSettings.jabatan_kiri || 'Kepala Klinik';
+          signLeft1.font = { name: 'Calibri', size: 9, bold: true };
+          signLeft1.alignment = { horizontal: 'center' };
+
+          ws.mergeCells(`E${r}:F${r}`);
+          const signRight1 = ws.getCell(`E${r}`);
+          signRight1.value = `${clinicSettings.kota || 'Pangkajene'}, ${todayIndo}`;
+          signRight1.font = { name: 'Calibri', size: 9 };
+          signRight1.alignment = { horizontal: 'center' };
+          ws.getRow(r).height = 18;
+          r++;
+
+          ws.mergeCells(`E${r}:F${r}`);
+          const signRight2 = ws.getCell(`E${r}`);
+          signRight2.value = clinicSettings.jabatan_kanan || 'Pemegang Barang';
+          signRight2.font = { name: 'Calibri', size: 9, bold: true };
+          signRight2.alignment = { horizontal: 'center' };
+          ws.getRow(r).height = 18;
+          r += 4; // Space for signature
+
+          ws.mergeCells(`B${r}:C${r}`);
+          const signLeftName = ws.getCell(`B${r}`);
+          signLeftName.value = clinicSettings.nama_kiri || 'dr. Syah Rizal Syam Pohan';
+          signLeftName.font = { name: 'Calibri', size: 9, bold: true, underline: true };
+          signLeftName.alignment = { horizontal: 'center' };
+
+          ws.mergeCells(`E${r}:F${r}`);
+          const signRightName = ws.getCell(`E${r}`);
+          signRightName.value = clinicSettings.nama_kanan || 'Hera A.md.Keb';
+          signRightName.font = { name: 'Calibri', size: 9, bold: true, underline: true };
+          signRightName.alignment = { horizontal: 'center' };
+          ws.getRow(r).height = 18;
+          r++;
+
+          if (clinicSettings.nip_kiri) {
+            ws.mergeCells(`B${r}:C${r}`);
+            const signLeftNip = ws.getCell(`B${r}`);
+            signLeftNip.value = clinicSettings.nip_kiri;
+            signLeftNip.font = { name: 'Calibri', size: 8, color: { argb: 'FF475569' } };
+            signLeftNip.alignment = { horizontal: 'center' };
+            ws.getRow(r).height = 16;
+            r++;
+          }
+
+          // Generate file & download
+          const buffer = await wb.xlsx.writeBuffer();
+          const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast('Laporan Excel resmi berhasil diunduh lengkap dengan Logo');
+          return;
+        } catch (excelErr) {
+          console.error('Error saat membuat Excel dengan ExcelJS:', excelErr);
+        }
+      }
+
+      // Fallback ke SheetJS / xlsx-js-style jika ExcelJS belum tersedia
+      if (typeof XLSX === 'undefined') {
+        showToast('Pustaka Excel belum termuat', 'error');
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+      const ws = {};
+      const merges = [];
+      const rowHeights = [];
+
+      // Standar Border Tipis
+      const borderThin = {
+        top: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        bottom: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        right: { style: 'thin', color: { rgb: 'CBD5E1' } }
+      };
+
+      // Header Kolom Style (Navy gelap, teks putih tebal, tengah)
+      const tableHeaderStyle = {
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: 'FFFFFF' } },
+        fill: { fgColor: { rgb: '1E293B' } },
+        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+        border: borderThin
+      };
+
+      // Helper Set Cell
+      function setCell(r, c, v, type = 's', style = {}, numFmt = null) {
+        const addr = XLSX.utils.encode_cell({ r, c });
+        const cell = { t: type, v: v };
+        if (style && Object.keys(style).length > 0) cell.s = style;
+        if (numFmt) cell.z = numFmt;
+        ws[addr] = cell;
+      }
+
+      // Helper Merge Cells & Apply Border
+      function mergeCells(r1, c1, r2, c2, style = {}) {
+        merges.push({ s: { r: r1, c: c1 }, e: { r: r2, c: c2 } });
+        if (style && Object.keys(style).length > 0) {
+          for (let r = r1; r <= r2; r++) {
+            for (let c = c1; c <= c2; c++) {
+              const addr = XLSX.utils.encode_cell({ r, c });
+              if (!ws[addr]) {
+                ws[addr] = { t: 's', v: '', s: style };
+              } else {
+                ws[addr].s = Object.assign({}, ws[addr].s, style);
+              }
+            }
+          }
+        }
+      }
+
+      let r = 0;
+
+      // 1. KOP SURAT RESMI EXCEL (Sesuai Kop Surat Klinik Aisyiyah Pangkajene)
+      setCell(r, 0, (clinicSettings.nama_klinik || 'KLINIK AISYIYAH PANGKAJENE').toUpperCase(), 's', {
+        font: { name: 'Calibri', sz: 14, bold: true, color: { rgb: '0F172A' } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      });
+      mergeCells(r, 0, r, 5);
+      rowHeights.push({ hpt: 22 });
+      r++;
+
+      setCell(r, 0, clinicSettings.alamat || 'Jl. Andi Cammi. No. 17 Pangkajene Kabupaten Sidenreng Rappang, Provinsi Sulawesi Selatan', 's', {
+        font: { name: 'Calibri', sz: 9, bold: false, color: { rgb: '334155' } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      });
+      mergeCells(r, 0, r, 5);
+      rowHeights.push({ hpt: 16 });
+      r++;
+
+      setCell(r, 0, `Email: ${clinicSettings.email || 'klinikaisyiyahpangkajene@gmail.com'}   Hp. ${clinicSettings.telepon || '0878-3117-7100'}`, 's', {
+        font: { name: 'Calibri', sz: 9, bold: false, color: { rgb: '334155' } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      });
+      mergeCells(r, 0, r, 5);
+      rowHeights.push({ hpt: 16 });
+      r++;
+
+      // Garis Pemisah Kop
+      setCell(r, 0, '', 's', {
+        border: { bottom: { style: 'medium', color: { rgb: '0F172A' } } }
+      });
+      mergeCells(r, 0, r, 5, {
+        border: { bottom: { style: 'medium', color: { rgb: '0F172A' } } }
+      });
+      rowHeights.push({ hpt: 8 });
+      r++;
+
+      // Judul Laporan & Periode
+      setCell(r, 0, 'LAPORAN INVENTARIS DAN PENGELUARAN OPERASIONAL', 's', {
+        font: { name: 'Calibri', sz: 12, bold: true, color: { rgb: '0F172A' } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      });
+      mergeCells(r, 0, r, 5);
+      rowHeights.push({ hpt: 20 });
+      r++;
+
+      setCell(r, 0, `PERIODE : ${periodeTxt}`, 's', {
+        font: { name: 'Calibri', sz: 10, bold: true, italic: true, color: { rgb: '047857' } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      });
+      mergeCells(r, 0, r, 5);
+      rowHeights.push({ hpt: 18 });
+      r++;
+
+      // Baris Kosong
+      rowHeights.push({ hpt: 10 });
+      r++;
+
+      // 2. HEADER KOLOM TABEL
+      const headers = ['No', 'Tanggal', 'Jenis Barang / Uraian', 'Satuan', 'Metode', 'Harga / Nominal (Rp)'];
+      headers.forEach((h, c) => {
+        setCell(r, c, h, 's', tableHeaderStyle);
+      });
+      rowHeights.push({ hpt: 24 });
+      r++;
+
+      // 3. GROUPING PER KATEGORI (SUB TOTAL & PENOMORAN ULANG)
+      const groups = {};
+      pengeluaranItems.forEach(item => {
+        const kat = (item.kategori || 'LAIN-LAIN').trim().toUpperCase();
+        if (!groups[kat]) groups[kat] = [];
+        groups[kat].push(item);
+      });
+
+      let grandTotalPengeluaran = 0;
+
+      const categoryKeys = Object.keys(groups).sort();
+      if (categoryKeys.length === 0) {
+        setCell(r, 0, 'Tidak ada data pengeluaran pada periode ini', 's', {
+          font: { italic: true, sz: 10, color: { rgb: '94A3B8' } },
+          alignment: { horizontal: 'center', vertical: 'center' },
+          border: borderThin
+        });
+        mergeCells(r, 0, r, 5, { border: borderThin });
+        rowHeights.push({ hpt: 24 });
+        r++;
+      } else {
+        categoryKeys.forEach(kategori => {
+          const items = groups[kategori];
+          let subTotal = 0;
+
+          // Sub-header Kategori (Warna soft slate, teks tebal, merged A-F)
+          const catStyle = {
+            font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '0F172A' } },
+            fill: { fgColor: { rgb: 'E2E8F0' } },
+            alignment: { horizontal: 'left', vertical: 'center' },
+            border: borderThin
+          };
+          setCell(r, 0, `  KATEGORI: ${kategori}`, 's', catStyle);
+          mergeCells(r, 0, r, 5, catStyle);
+          rowHeights.push({ hpt: 22 });
+          r++;
+
+          // Baris Item dalam Kategori (Nomor reset 1, 2, 3...)
+          items.forEach((item, index) => {
+            const nominal = parseInt(item.nominal, 10) || 0;
+            subTotal += nominal;
+            grandTotalPengeluaran += nominal;
+
+            const isEven = index % 2 === 0;
+            const bgHex = isEven ? 'FFFFFF' : 'F8FAFC';
+            const itemStyle = {
+              font: { name: 'Calibri', sz: 9 },
+              fill: { fgColor: { rgb: bgHex } },
+              border: borderThin
+            };
+
+            // No
+            setCell(r, 0, index + 1, 'n', { ...itemStyle, alignment: { horizontal: 'center', vertical: 'center' } });
+            // Tanggal
+            setCell(r, 1, item.tanggal, 's', { ...itemStyle, alignment: { horizontal: 'center', vertical: 'center' } });
+            // Uraian
+            setCell(r, 2, item.uraian, 's', { ...itemStyle, alignment: { horizontal: 'left', vertical: 'center' } });
+            // Satuan
+            setCell(r, 3, item.satuan || '-', 's', { ...itemStyle, alignment: { horizontal: 'center', vertical: 'center' } });
+            // Metode
+            setCell(r, 4, item.metode, 's', { ...itemStyle, alignment: { horizontal: 'center', vertical: 'center' } });
+            // Nominal (Format Angka Rupiah Resmi)
+            setCell(r, 5, nominal, 'n', {
+              ...itemStyle,
+              font: { name: 'Calibri', sz: 9, bold: true },
+              alignment: { horizontal: 'right', vertical: 'center' }
+            }, '"Rp" #,##0');
+
+            rowHeights.push({ hpt: 20 });
+            r++;
+          });
+
+          // Baris Sub-Total Kategori (Merged A-E, Soft Green, Teks Hijau Tua Tebal)
+          const subtotalStyle = {
+            font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '065F46' } },
+            fill: { fgColor: { rgb: 'ECFDF5' } },
+            alignment: { horizontal: 'right', vertical: 'center' },
+            border: borderThin
+          };
+          setCell(r, 0, `Jumlah (${kategori}) :`, 's', subtotalStyle);
+          mergeCells(r, 0, r, 4, subtotalStyle);
+          setCell(r, 5, subTotal, 'n', {
+            ...subtotalStyle,
+            alignment: { horizontal: 'right', vertical: 'center' }
+          }, '"Rp" #,##0');
+          rowHeights.push({ hpt: 22 });
+          r++;
+        });
+
+        // Baris JUMLAH TOTAL (Navy gelap, teks putih tebal, merged A-E, F nominal)
+        const grandTotalStyle = {
+          font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: 'FFFFFF' } },
+          fill: { fgColor: { rgb: '1E293B' } },
+          alignment: { horizontal: 'right', vertical: 'center' },
+          border: {
+            top: { style: 'medium', color: { rgb: '0F172A' } },
+            bottom: { style: 'double', color: { rgb: '0F172A' } },
+            left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+            right: { style: 'thin', color: { rgb: 'CBD5E1' } }
+          }
+        };
+        setCell(r, 0, 'JUMLAH TOTAL PENGELUARAN & INVENTARIS :', 's', grandTotalStyle);
+        mergeCells(r, 0, r, 4, grandTotalStyle);
+        setCell(r, 5, grandTotalPengeluaran, 'n', {
+          ...grandTotalStyle,
+          font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: 'FFFFFF' } },
+          alignment: { horizontal: 'right', vertical: 'center' }
+        }, '"Rp" #,##0');
+        rowHeights.push({ hpt: 26 });
+        r++;
+      }
+
+      // Baris Kosong
+      rowHeights.push({ hpt: 14 });
+      r++;
+
+      // 4. REKAPITULASI KAS & OPERASIONAL (TABEL BOX RAPI)
+      let totalPemasukan = 0;
+      filteredTransactions.forEach(item => {
+        if (item.jenis === 'Pemasukan') totalPemasukan += (parseInt(item.nominal, 10) || 0);
+      });
+      const sisaSaldo = totalPemasukan - grandTotalPengeluaran;
+
+      // Header Rekap
+      const rekapHeaderStyle = {
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '0F172A' } },
+        fill: { fgColor: { rgb: 'F1F5F9' } },
+        alignment: { horizontal: 'center', vertical: 'center' },
+        border: borderThin
+      };
+      setCell(r, 1, 'REKAPITULASI KAS & OPERASIONAL', 's', rekapHeaderStyle);
+      mergeCells(r, 1, r, 5, rekapHeaderStyle);
+      rowHeights.push({ hpt: 22 });
+      r++;
+
+      // Pemasukan
+      setCell(r, 1, 'Total Pemasukan / Dana Kas', 's', { font: { sz: 9, bold: false }, border: borderThin, alignment: { horizontal: 'left', vertical: 'center' } });
+      mergeCells(r, 1, r, 4, { border: borderThin });
+      setCell(r, 5, totalPemasukan, 'n', {
+        font: { sz: 9, bold: true, color: { rgb: '047857' } },
+        alignment: { horizontal: 'right', vertical: 'center' },
+        border: borderThin
+      }, '"Rp" #,##0');
+      rowHeights.push({ hpt: 20 });
+      r++;
+
+      // Pengeluaran
+      setCell(r, 1, 'Jumlah Total Pengeluaran', 's', { font: { sz: 9, bold: false }, border: borderThin, alignment: { horizontal: 'left', vertical: 'center' } });
+      mergeCells(r, 1, r, 4, { border: borderThin });
+      setCell(r, 5, grandTotalPengeluaran, 'n', {
+        font: { sz: 9, bold: true, color: { rgb: 'B91C1C' } },
+        alignment: { horizontal: 'right', vertical: 'center' },
+        border: borderThin
+      }, '"Rp" #,##0');
+      rowHeights.push({ hpt: 20 });
+      r++;
+
+      // Sisa Saldo
+      const saldoStyle = {
+        font: { sz: 10, bold: true, color: { rgb: '1D4ED8' } },
+        fill: { fgColor: { rgb: 'EFF6FF' } },
+        border: borderThin
+      };
+      setCell(r, 1, 'Sisa Saldo Kas Klinik', 's', { ...saldoStyle, alignment: { horizontal: 'left', vertical: 'center' } });
+      mergeCells(r, 1, r, 4, saldoStyle);
+      setCell(r, 5, sisaSaldo, 'n', { ...saldoStyle, alignment: { horizontal: 'right', vertical: 'center' } }, '"Rp" #,##0');
+      rowHeights.push({ hpt: 22 });
+      r++;
+
+      // Baris Kosong
+      rowHeights.push({ hpt: 16 });
+      r++;
+
+      // 5. BLOK TANDA TANGAN (KIRI: PIMPINAN, KANAN: PEMEGANG BARANG)
+      const todayIndo = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      // Baris 1: Tanggal & Jabatan
+      setCell(r, 1, clinicSettings.jabatan_kiri, 's', { font: { sz: 9, bold: true }, alignment: { horizontal: 'center' } });
+      mergeCells(r, 1, r, 2);
+
+      setCell(r, 4, `${clinicSettings.kota}, ${todayIndo}`, 's', { font: { sz: 9 }, alignment: { horizontal: 'center' } });
+      mergeCells(r, 4, r, 5);
+      rowHeights.push({ hpt: 18 });
+      r++;
+
+      setCell(r, 4, clinicSettings.jabatan_kanan, 's', { font: { sz: 9, bold: true }, alignment: { horizontal: 'center' } });
+      mergeCells(r, 4, r, 5);
+      rowHeights.push({ hpt: 18 });
+      r++;
+
+      // Jarak tanda tangan
+      rowHeights.push({ hpt: 18 });
+      r++;
+      rowHeights.push({ hpt: 18 });
+      r++;
+      rowHeights.push({ hpt: 18 });
+      r++;
+
+      // Nama Penandatangan (Tebal & Bergaris Bawah)
+      setCell(r, 1, clinicSettings.nama_kiri, 's', { font: { sz: 9, bold: true, underline: true }, alignment: { horizontal: 'center' } });
+      mergeCells(r, 1, r, 2);
+
+      setCell(r, 4, clinicSettings.nama_kanan, 's', { font: { sz: 9, bold: true, underline: true }, alignment: { horizontal: 'center' } });
+      mergeCells(r, 4, r, 5);
+      rowHeights.push({ hpt: 18 });
+      r++;
+
+      // NIP (jika ada)
+      if (clinicSettings.nip_kiri) {
+        setCell(r, 1, clinicSettings.nip_kiri, 's', { font: { sz: 8, color: { rgb: '475569' } }, alignment: { horizontal: 'center' } });
+        mergeCells(r, 1, r, 2);
+        rowHeights.push({ hpt: 16 });
+        r++;
+      }
+
+      // Metadata Worksheet: Reference Range, Merges, Column Widths, Row Heights, & Gridlines
+      ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: r, c: 5 } });
+      ws['!merges'] = merges;
+      ws['!rows'] = rowHeights;
+      ws['!views'] = [{ showGridLines: true }];
+      ws['!cols'] = [
+        { wch: 6 },  // A: No
+        { wch: 15 }, // B: Tanggal
+        { wch: 42 }, // C: Jenis Barang / Uraian
+        { wch: 12 }, // D: Satuan
+        { wch: 14 }, // E: Metode
+        { wch: 24 }  // F: Harga / Nominal (Rp)
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Laporan Inventaris');
+
+      XLSX.writeFile(wb, fileName);
+      showToast('Laporan Excel resmi berhasil diunduh dengan format rapi');
+    }
+
+    // ====================================================================
+    // FITUR UNDUH LAPORAN PDF (.PDF) RESMI
+    // ====================================================================
+
+    function exportToPDF() {
+      if (typeof window.jspdf === 'undefined') {
+        showToast('Pustaka jsPDF belum termuat', 'error');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4'); // A4 Portrait
+
+      const tahun = document.getElementById('filterTahun').value;
+      const bulan = document.getElementById('filterBulan').value;
+      const pengeluaranItems = filteredTransactions.filter(i => i.jenis === 'Pengeluaran');
+
+      const bulanNama = [
+        '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+      let tahunAnggaranStr = tahun === 'semua' ? 'SEMUA TAHUN' : tahun;
+      if (bulan !== 'semua') {
+        tahunAnggaranStr += ` (${bulanNama[parseInt(bulan, 10)].toUpperCase()})`;
+      }
+
+      // 1. KOP SURAT RESMI (Persis Sesuai Kop Surat Klinik Aisyiyah Pangkajene)
+      try {
+        // Logo resmi Klinik Pratama Aisyiyah di kiri atas
+        doc.addImage(LOGO_AISYIYAH_BASE64, 'PNG', 14, 8, 20, 20);
+      } catch (err) {
+        console.warn('Gagal memuat logo ke PDF:', err);
+      }
+
+      // Teks Kop Tengah
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text(clinicSettings.nama_klinik || 'KLINIK AISYIYAH PANGKAJENE', 114, 14, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.text(clinicSettings.alamat || 'Jl. Andi Cammi. No. 17 Pangkajene Kabupaten Sidenreng Rappang,', 114, 19, { align: 'center' });
+      doc.text(`Provinsi Sulawesi Selatan, Email: ${clinicSettings.email || 'klinikaisyiyahpangkajene@gmail.com'}`, 114, 23, { align: 'center' });
+      doc.text(`Hp. ${clinicSettings.telepon || '0878-3117-7100'}`, 114, 27, { align: 'center' });
+
+      // Garis Ganda Pembatas Kop Surat
+      doc.setLineWidth(0.8);
+      doc.line(14, 31, 196, 31);
+      doc.setLineWidth(0.2);
+      doc.line(14, 32, 196, 32);
+
+      // Judul Laporan & Periode
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text('LAPORAN INVENTARIS DAN PENGELUARAN OPERASIONAL', 105, 38, { align: 'center' });
+      doc.setFontSize(9.5);
+      doc.text(`TAHUN ANGGARAN ${tahunAnggaranStr}`, 105, 43, { align: 'center' });
+
+      // 2. SIAPKAN DATA TABEL AUTOTABLE DENGAN GROUPING KATEGORI
+      const tableRows = [];
+      const groups = {};
+      pengeluaranItems.forEach(item => {
+        const kat = (item.kategori || 'LAIN-LAIN').trim().toUpperCase();
+        if (!groups[kat]) groups[kat] = [];
+        groups[kat].push(item);
+      });
+
+      let grandTotalPengeluaran = 0;
+
+      Object.keys(groups).sort().forEach(kategori => {
+        const items = groups[kategori];
+        let subTotal = 0;
+
+        // Row Sub-Header Kategori (Spanning col 1-6)
+        tableRows.push([
+          {
+            content: `KATEGORI: ${kategori}`,
+            colSpan: 6,
+            styles: {
+              fillColor: [230, 235, 240],
+              fontStyle: 'bold',
+              textColor: [15, 23, 42]
+            }
+          }
+        ]);
+
+        // Item Rows dengan No 1, 2, 3...
+        items.forEach((item, index) => {
+          const nominal = parseInt(item.nominal, 10) || 0;
+          subTotal += nominal;
+          grandTotalPengeluaran += nominal;
+
+          tableRows.push([
+            { content: String(index + 1), styles: { halign: 'center' } },
+            { content: formatTanggalIndo(item.tanggal) },
+            { content: item.uraian },
+            { content: item.satuan || '-', styles: { halign: 'center' } },
+            { content: item.metode, styles: { halign: 'center' } },
+            { content: formatRupiah(nominal), styles: { halign: 'right' } }
+          ]);
+        });
+
+        // Row Sub-Total "Jumlah"
+        tableRows.push([
+          {
+            content: `Jumlah (${kategori})`,
+            colSpan: 5,
+            styles: {
+              halign: 'right',
+              fontStyle: 'bold',
+              fillColor: [245, 247, 250]
+            }
+          },
+          {
+            content: formatRupiah(subTotal),
+            styles: {
+              halign: 'right',
+              fontStyle: 'bold',
+              fillColor: [245, 247, 250]
+            }
+          }
+        ]);
+      });
+
+      // Row JUMLAH TOTAL
+      tableRows.push([
+        {
+          content: 'JUMLAH TOTAL',
+          colSpan: 5,
+          styles: {
+            halign: 'right',
+            fontStyle: 'bold',
+            fillColor: [220, 225, 230],
+            textColor: [0, 0, 0]
+          }
+        },
+        {
+          content: formatRupiah(grandTotalPengeluaran),
+          styles: {
+            halign: 'right',
+            fontStyle: 'bold',
+            fillColor: [220, 225, 230],
+            textColor: [0, 0, 0]
+          }
+        }
+      ]);
+
+      // Cetak AutoTable
+      doc.autoTable({
+        startY: 47,
+        head: [['No', 'Tanggal', 'Jenis Barang / Uraian', 'Satuan', 'Metode', 'Harga / Nominal (Rp)']],
+        body: tableRows,
+        theme: 'grid',
+        styles: {
+          fontSize: 8,
+          cellPadding: 2,
+          lineColor: [180, 180, 180],
+          lineWidth: 0.1,
+          font: 'helvetica'
+        },
+        headStyles: {
+          fillColor: [30, 41, 59], // Slate 800
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        columnStyles: {
+          0: { cellWidth: 10, halign: 'center' },
+          1: { cellWidth: 26 },
+          2: { cellWidth: 'auto' },
+          3: { cellWidth: 16, halign: 'center' },
+          4: { cellWidth: 18, halign: 'center' },
+          5: { cellWidth: 34, halign: 'right' }
+        },
+        margin: { left: 14, right: 14 }
+      });
+
+      // 3. REKAP SALDO KAS & BLOK TANDA TANGAN DI BAWAH TABEL
+      let finalY = doc.lastAutoTable.finalY + 8;
+      const pageHeight = doc.internal.pageSize.height;
+
+      // Cek apakah muat di halaman yang sama, jika tidak tambah halaman baru
+      if (finalY + 55 > pageHeight) {
+        doc.addPage();
+        finalY = 20;
+      }
+
+      // Hitung Rekap Saldo
+      let totalPemasukan = 0;
+      filteredTransactions.forEach(item => {
+        if (item.jenis === 'Pemasukan') totalPemasukan += (parseInt(item.nominal, 10) || 0);
+      });
+      const sisaSaldo = totalPemasukan - grandTotalPengeluaran;
+
+      // Kotak Rekap Saldo Ringkas
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(203, 213, 225);
+      doc.roundedRect(14, finalY, 182, 18, 2, 2, 'FD');
+
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Total Pemasukan Kas : ${formatRupiah(totalPemasukan)}`, 20, finalY + 7);
+      doc.text(`Jumlah Total Pengeluaran : ${formatRupiah(grandTotalPengeluaran)}`, 20, finalY + 13);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Sisa Saldo Kas Klinik : ${formatRupiah(sisaSaldo)}`, 120, finalY + 10);
+
+      // Tanda Tangan Kiri & Kanan
+      const signY = finalY + 26;
+      const todayIndo = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      // Penandatangan Kiri (Kepala Klinik)
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text('Mengetahui,', 22, signY);
+      doc.text(clinicSettings.jabatan_kiri || 'Kepala Klinik', 22, signY + 4.5);
+      doc.setFont('helvetica', 'bold');
+      const namaKiriTxt = clinicSettings.nama_kiri || 'dr. Syah Rizal Syam Pohan';
+      doc.text(namaKiriTxt, 22, signY + 22);
+      // Garis bawah nama
+      const wKiri = doc.getTextWidth(namaKiriTxt);
+      doc.setLineWidth(0.3);
+      doc.line(22, signY + 22.8, 22 + wKiri, signY + 22.8);
+      if (clinicSettings.nip_kiri) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.text(clinicSettings.nip_kiri, 22, signY + 27);
+      }
+
+      // Penandatangan Kanan (Pemegang Barang)
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text(`${clinicSettings.kota || 'Pangkajene'}, ${todayIndo}`, 128, signY);
+      doc.text(clinicSettings.jabatan_kanan || 'Pemegang Barang', 128, signY + 4.5);
+      doc.setFont('helvetica', 'bold');
+      const namaKananTxt = clinicSettings.nama_kanan || 'Hera A.md.Keb';
+      doc.text(namaKananTxt, 128, signY + 22);
+      // Garis bawah nama
+      const wKanan = doc.getTextWidth(namaKananTxt);
+      doc.setLineWidth(0.3);
+      doc.line(128, signY + 22.8, 128 + wKanan, signY + 22.8);
+
+      const fileName = `Laporan_Inventaris_${clinicSettings.nama_klinik.replace(/[^a-zA-Z0-9]/g, '_')}_${tahun}.pdf`;
+      doc.save(fileName);
+      showToast('Laporan PDF resmi berhasil diunduh');
+    }
+
+    // Helper Escape HTML
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Inisialisasi saat Halaman Dimuat
+    document.addEventListener('DOMContentLoaded', async () => {
+      await fetchPengaturan();
+      await fetchTransaksi();
+    });
+  </script>
+
+</body>
+
+</html>
