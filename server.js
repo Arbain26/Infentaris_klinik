@@ -503,10 +503,14 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Jalankan Server
-app.listen(PORT, () => {
-  console.log(`=======================================================`);
-  console.log(`🏥 SISTEM LAPORAN INVENTARIS & PENGELUARAN KLINIK`);
-  console.log(`🚀 Server aktif di: http://localhost:${PORT}`);
-  console.log(`=======================================================`);
-});
+// Jalankan Server (Hanya jika dijalankan langsung / di luar lingkungan serverless Vercel)
+if (process.env.VERCEL !== '1' && !process.env.NOW_REGION) {
+  app.listen(PORT, () => {
+    console.log(`=======================================================`);
+    console.log(`🏥 SISTEM LAPORAN INVENTARIS & PENGELUARAN KLINIK`);
+    console.log(`🚀 Server aktif di: http://localhost:${PORT}`);
+    console.log(`=======================================================`);
+  });
+}
+
+module.exports = app;
