@@ -191,17 +191,25 @@
           <span class="text-xs font-semibold tracking-wider uppercase text-indigo-100">
             Sisa Saldo Kas Klinik
           </span>
-          <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white">
-            <i class="fa-solid fa-wallet text-lg"></i>
-          </div>
+          <button onclick="openModalAturSaldo()" title="Atur Ulang Saldo Kas"
+            class="px-2.5 py-1 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur text-[11px] font-semibold text-white inline-flex items-center gap-1.5 transition-colors border border-white/25 shadow-sm">
+            <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+            <span>Atur Ulang Saldo</span>
+          </button>
         </div>
         <div class="text-2xl sm:text-3xl font-extrabold tracking-tight" id="cardSisaSaldo">
           Rp 0
         </div>
-        <p class="text-xs text-indigo-100 mt-2 flex items-center gap-1.5">
-          <i class="fa-solid fa-scale-balanced text-xs"></i>
-          <span>Pemasukan dikurangi Pengeluaran</span>
-        </p>
+        <div class="flex items-center justify-between mt-2 pt-2 border-t border-white/15">
+          <p class="text-xs text-indigo-100 flex items-center gap-1.5">
+            <i class="fa-solid fa-scale-balanced text-xs"></i>
+            <span>Pemasukan - Pengeluaran</span>
+          </p>
+          <button onclick="openModalAturSaldo()" class="text-[11px] text-indigo-100 hover:text-white underline font-medium flex items-center gap-1">
+            <span>Ubah Saldo</span>
+            <i class="fa-solid fa-angle-right text-[10px]"></i>
+          </button>
+        </div>
       </div>
 
     </section>
@@ -434,11 +442,18 @@
             Sumber pendanaan operasional dan subsidi klinik
           </p>
         </div>
-        <button onclick="openModalTambahPemasukan()"
-          class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-white hover:bg-emerald-100 rounded-lg border border-emerald-300 shadow-sm transition-colors">
-          <i class="fa-solid fa-plus mr-1.5"></i>
-          Tambah Dana Masuk
-        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="openModalAturSaldo()"
+            class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-white hover:bg-indigo-50 rounded-lg border border-indigo-300 shadow-sm transition-colors">
+            <i class="fa-solid fa-arrows-rotate mr-1.5"></i>
+            Atur Ulang Saldo
+          </button>
+          <button onclick="openModalTambahPemasukan()"
+            class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-white hover:bg-emerald-100 rounded-lg border border-emerald-300 shadow-sm transition-colors">
+            <i class="fa-solid fa-plus mr-1.5"></i>
+            Tambah Dana Masuk
+          </button>
+        </div>
       </div>
 
       <!-- Main Table Pemasukan -->
@@ -769,6 +784,135 @@
           <button type="submit"
             class="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-all">
             Simpan Pengaturan
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- MODAL: ATUR ULANG SALDO KAS KLINIK -->
+  <!-- ==================================================================== -->
+  <div id="modalAturSaldo"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div
+      class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden transform transition-all my-8">
+
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-gradient-to-r from-indigo-700 to-blue-700 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white">
+            <i class="fa-solid fa-arrows-rotate text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">
+              Atur Ulang Saldo Kas Klinik
+            </h3>
+            <p class="text-xs text-indigo-100">Setel ulang atau sesuaikan sisa saldo kas secara otomatis</p>
+          </div>
+        </div>
+        <button onclick="closeModalAturSaldo()"
+          class="text-indigo-200 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Ringkasan Keuangan Saat Ini -->
+      <div class="p-6 bg-slate-50 border-b border-slate-200">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">Posisi Saldo Saat Ini :</p>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="block text-[11px] text-slate-400">Total Pemasukan</span>
+            <span class="font-bold text-emerald-600 text-xs sm:text-sm" id="aturModalTotalPemasukan">Rp 0</span>
+          </div>
+          <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="block text-[11px] text-slate-400">Total Pengeluaran</span>
+            <span class="font-bold text-rose-600 text-xs sm:text-sm" id="aturModalTotalPengeluaran">Rp 0</span>
+          </div>
+          <div class="bg-indigo-50/80 p-2.5 rounded-xl border border-indigo-200 shadow-sm">
+            <span class="block text-[11px] text-indigo-600 font-semibold">Sisa Saldo Kas</span>
+            <span class="font-extrabold text-indigo-700 text-xs sm:text-sm" id="aturModalSisaSaldo">Rp 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Atur Ulang Saldo -->
+      <form id="formAturSaldo" onsubmit="submitFormAturSaldo(event)" class="p-6 space-y-4">
+
+        <!-- Input Target Saldo -->
+        <div>
+          <label for="inputTargetSaldo" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            Target Sisa Saldo Kas Baru (Rp) <span class="text-rose-500">*</span>
+          </label>
+          <div class="relative">
+            <span class="absolute left-3 top-2.5 text-sm font-bold text-slate-400">Rp</span>
+            <input type="number" id="inputTargetSaldo" required min="0" step="1000" placeholder="Contoh: 15000000"
+              class="w-full text-base font-bold rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 pl-10 pr-3 border transition-colors bg-white text-slate-900">
+          </div>
+          <p class="text-xs text-indigo-600 font-semibold mt-1.5 flex items-center justify-between">
+            <span>Terbaca: <span id="targetSaldoPreview">Rp 0</span></span>
+            <span class="text-slate-400 font-normal">Sisa saldo setelah penyesuaian</span>
+          </p>
+        </div>
+
+        <!-- Mode Atur Ulang -->
+        <div class="space-y-2.5 pt-2">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Metode Atur Ulang :
+          </label>
+
+          <label class="flex items-start gap-3 p-3 rounded-xl border border-indigo-200 bg-indigo-50/50 cursor-pointer hover:bg-indigo-50 transition-colors">
+            <input type="radio" name="modeAturSaldo" value="bersihkan_dan_set" checked
+              class="mt-1 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+            <div class="text-xs">
+              <span class="font-bold text-slate-900 block">Reset Bersih & Tetapkan Saldo Awal (Direkomendasikan)</span>
+              <span class="text-slate-500 leading-relaxed block mt-0.5">
+                Menghapus catatan kas masuk uji coba lama, dan menetapkan 1 transaksi Saldo Awal baru sehingga Sisa Saldo tepat menjadi nominal yang Anda tentukan.
+              </span>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition-colors">
+            <input type="radio" name="modeAturSaldo" value="sesuaikan"
+              class="mt-1 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+            <div class="text-xs">
+              <span class="font-bold text-slate-900 block">Catat Penyesuaian Selisih Saldo</span>
+              <span class="text-slate-500 leading-relaxed block mt-0.5">
+                Mempertahankan riwayat kas masuk lama, dan menambahkan transaksi selisih penyesuaian agar sisa saldo mencapai nominal target.
+              </span>
+            </div>
+          </label>
+        </div>
+
+        <!-- Tanggal & Keterangan -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <div>
+            <label for="inputAturTanggal" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Tanggal Efektif
+            </label>
+            <input type="date" id="inputAturTanggal" required
+              class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border transition-colors">
+          </div>
+          <div>
+            <label for="inputAturKeterangan" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Keterangan Saldo
+            </label>
+            <input type="text" id="inputAturKeterangan" value="Saldo Awal Kas Klinik" required
+              class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border transition-colors">
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Modal -->
+        <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+          <button type="button" onclick="closeModalAturSaldo()"
+            class="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors">
+            Batal
+          </button>
+          <button type="submit" id="btnSubmitAturSaldo"
+            class="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-all flex items-center gap-2">
+            <i class="fa-solid fa-check"></i>
+            <span>Terapkan Saldo Baru</span>
           </button>
         </div>
 
@@ -2477,7 +2621,108 @@
         .replace(/'/g, '&#039;');
     }
 
-    // Inisialisasi saat Halaman Dimuat
+    // ====================================================================
+    // FITUR ATUR ULANG SALDO KAS KLINIK
+    // ====================================================================
+
+    function openModalAturSaldo() {
+      let totalPemasukan = 0;
+      let totalPengeluaran = 0;
+      filteredTransactions.forEach(item => {
+        const nominal = parseInt(item.nominal, 10) || 0;
+        if (item.jenis === 'Pemasukan') totalPemasukan += nominal;
+        else totalPengeluaran += nominal;
+      });
+      const sisaSaldo = totalPemasukan - totalPengeluaran;
+
+      const modalPemasukan = document.getElementById('aturModalTotalPemasukan');
+      if (modalPemasukan) modalPemasukan.innerText = formatRupiah(totalPemasukan);
+      const modalPengeluaran = document.getElementById('aturModalTotalPengeluaran');
+      if (modalPengeluaran) modalPengeluaran.innerText = formatRupiah(totalPengeluaran);
+      const modalSaldo = document.getElementById('aturModalSisaSaldo');
+      if (modalSaldo) modalSaldo.innerText = formatRupiah(sisaSaldo);
+
+      // Default target saldo = saldo saat ini jika wajar, atau kosongkan
+      const inputTarget = document.getElementById('inputTargetSaldo');
+      if (inputTarget) {
+        inputTarget.value = (sisaSaldo > 0 && sisaSaldo < 1000000000) ? sisaSaldo : '';
+        const prev = document.getElementById('targetSaldoPreview');
+        if (prev) prev.innerText = inputTarget.value ? formatRupiah(parseInt(inputTarget.value, 10)) : 'Rp 0';
+      }
+
+      const inputTgl = document.getElementById('inputAturTanggal');
+      if (inputTgl) inputTgl.value = new Date().toISOString().split('T')[0];
+
+      const modal = document.getElementById('modalAturSaldo');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeModalAturSaldo() {
+      const modal = document.getElementById('modalAturSaldo');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    // Listener realtime input target saldo
+    const elTargetInput = document.getElementById('inputTargetSaldo');
+    if (elTargetInput) {
+      elTargetInput.addEventListener('input', function(e) {
+        const val = parseInt(e.target.value, 10);
+        const prev = document.getElementById('targetSaldoPreview');
+        if (prev) prev.innerText = val ? formatRupiah(val) : 'Rp 0';
+      });
+    }
+
+    async function submitFormAturSaldo(e) {
+      e.preventDefault();
+      const targetSaldo = parseInt(document.getElementById('inputTargetSaldo').value, 10) || 0;
+      const tanggal = document.getElementById('inputAturTanggal').value;
+      const keterangan = document.getElementById('inputAturKeterangan').value.trim();
+      const modeRadio = document.querySelector('input[name="modeAturSaldo"]:checked');
+      const mode = modeRadio ? modeRadio.value : 'bersihkan_dan_set';
+
+      const btn = document.getElementById('btnSubmitAturSaldo');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Memproses...';
+      }
+
+      try {
+        const res = await fetch('/api/transaksi/reset-saldo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            target_saldo: targetSaldo,
+            tanggal: tanggal,
+            keterangan: keterangan,
+            mode: mode
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(json.message);
+          closeModalAturSaldo();
+          await fetchTransaksi();
+        } else {
+          showToast(json.message || 'Gagal mengatur ulang saldo', 'error');
+        }
+      } catch (err) {
+        console.error('Error reset saldo:', err);
+        showToast('Terjadi kesalahan jaringan', 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i> <span>Terapkan Saldo Baru</span>';
+        }
+      }
+    }
+
+        // Inisialisasi saat Halaman Dimuat
     document.addEventListener('DOMContentLoaded', async () => {
       await fetchPengaturan();
       await fetchTransaksi();

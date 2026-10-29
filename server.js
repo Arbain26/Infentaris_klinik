@@ -309,6 +309,84 @@ app.delete('/api/transaksi/:id', async (req, res) => {
 });
 
 /**
+ * POST /api/transaksi/reset-saldo
+ * Mengatur ulang saldo kas klinik secara instan
+ */
+app.post('/api/transaksi/reset-saldo', async (req, res) => {
+  try {
+    const { target_saldo, tanggal, keterangan, mode } = req.body;
+    const cleanTargetSaldo = Math.max(0, parseInt(target_saldo, 10) || 0);
+    const cleanTanggal = tanggal || new Date().toISOString().split('T')[0];
+    const cleanKeterangan = (keterangan && keterangan.trim()) ? keterangan.trim() : 'Saldo Awal Kas Klinik';
+    const isResetClean = mode === 'bersihkan_dan_set';
+
+    if (isResetClean) {
+      // 1. Hitung total pengeluaran yang ada
+      const [pengeluaranRows] = await pool.query(
+        "SELECT COALESCE(SUM(nominal), 0) AS total_pengeluaran FROM transaksi WHERE jenis = 'Pengeluaran'"
+      );
+      const totalPengeluaran = parseInt(pengeluaranRows[0].total_pengeluaran, 10) || 0;
+
+      // 2. Hapus seluruh data pemasukan lama
+      await pool.query("DELETE FROM transaksi WHERE jenis = 'Pemasukan'");
+
+      // 3. Masukkan 1 transaksi Pemasukan baru agar Sisa Saldo = cleanTargetSaldo
+      // Rumus: Sisa Saldo = Total Pemasukan - Total Pengeluaran
+      // Maka: Total Pemasukan Baru = cleanTargetSaldo + totalPengeluaran
+      const nominalPemasukanBaru = cleanTargetSaldo + totalPengeluaran;
+
+      await pool.query(
+        "INSERT INTO transaksi (tanggal, jenis, kategori, uraian, satuan, nominal, metode) VALUES (?, 'Pemasukan', 'DANA MASUK', ?, '-', ?, 'Transfer')",
+        [cleanTanggal, cleanKeterangan, nominalPemasukanBaru]
+      );
+
+      return res.json({
+        success: true,
+        message: `Saldo kas berhasil diatur ulang menjadi Rp ${cleanTargetSaldo.toLocaleString('id-ID')}`,
+        data: {
+          target_saldo: cleanTargetSaldo,
+          nominal_pemasukan: nominalPemasukanBaru,
+          total_pengeluaran: totalPengeluaran
+        }
+      });
+    } else {
+      // Mode Penyesuaian Saldo Otomatis (Adjust)
+      const [pemasukanRows] = await pool.query("SELECT COALESCE(SUM(nominal), 0) AS total FROM transaksi WHERE jenis = 'Pemasukan'");
+      const [pengeluaranRows] = await pool.query("SELECT COALESCE(SUM(nominal), 0) AS total FROM transaksi WHERE jenis = 'Pengeluaran'");
+
+      const totalPemasukan = parseInt(pemasukanRows[0].total, 10) || 0;
+      const totalPengeluaran = parseInt(pengeluaranRows[0].total, 10) || 0;
+      const currentSaldo = totalPemasukan - totalPengeluaran;
+      const selisih = cleanTargetSaldo - currentSaldo;
+
+      if (selisih > 0) {
+        await pool.query(
+          "INSERT INTO transaksi (tanggal, jenis, kategori, uraian, satuan, nominal, metode) VALUES (?, 'Pemasukan', 'DANA MASUK', ?, '-', ?, 'Transfer')",
+          [cleanTanggal, cleanKeterangan || 'Penyesuaian Tambahan Saldo Kas', selisih]
+        );
+      } else if (selisih < 0) {
+        await pool.query(
+          "INSERT INTO transaksi (tanggal, jenis, kategori, uraian, satuan, nominal, metode) VALUES (?, 'Pengeluaran', 'PENYESUAIAN KAS', ?, '-', ?, 'Tunai')",
+          [cleanTanggal, cleanKeterangan || 'Penyesuaian Koreksi Saldo Kas', Math.abs(selisih)]
+        );
+      }
+
+      return res.json({
+        success: true,
+        message: `Saldo kas berhasil disesuaikan menjadi Rp ${cleanTargetSaldo.toLocaleString('id-ID')}`,
+        data: {
+          target_saldo: cleanTargetSaldo,
+          selisih: selisih
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error POST /api/transaksi/reset-saldo:', error);
+    res.status(500).json({ success: false, message: 'Gagal mengatur ulang saldo', error: error.message });
+  }
+});
+
+/**
  * GET /api/pengaturan
  * Mengambil data pengaturan nama klinik, kota, dan penandatangan
  */
