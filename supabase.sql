@@ -18,8 +18,10 @@ CREATE TABLE IF NOT EXISTS public.pengaturan_klinik (
   nama_kanan TEXT NOT NULL DEFAULT 'Hera A.md.Keb'
 );
 
--- Matikan RLS agar API dapat membaca dan menulis data
+-- Matikan RLS dan buat Kebijakan Akses Penuh
 ALTER TABLE public.pengaturan_klinik DISABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Akses Penuh Pengaturan" ON public.pengaturan_klinik;
+CREATE POLICY "Akses Penuh Pengaturan" ON public.pengaturan_klinik FOR ALL TO public USING (true) WITH CHECK (true);
 
 -- Masukkan Data Awal Pengaturan Klinik
 INSERT INTO public.pengaturan_klinik (id, nama_klinik, alamat, email, telepon, kota, jabatan_kiri, nama_kiri, nip_kiri, jabatan_kanan, nama_kanan)
@@ -61,8 +63,10 @@ CREATE TABLE IF NOT EXISTS public.transaksi (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Matikan RLS agar API dapat membaca dan menulis data
+-- Matikan RLS dan buat Kebijakan Akses Penuh
 ALTER TABLE public.transaksi DISABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Akses Penuh Transaksi" ON public.transaksi;
+CREATE POLICY "Akses Penuh Transaksi" ON public.transaksi FOR ALL TO public USING (true) WITH CHECK (true);
 
 -- Indeks untuk pencarian cepat
 CREATE INDEX IF NOT EXISTS idx_transaksi_tanggal ON public.transaksi (tanggal);
@@ -104,8 +108,15 @@ CREATE TABLE IF NOT EXISTS public.stok_barang (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Matikan RLS agar API dapat membaca dan menulis data
+-- Matikan RLS dan buat Kebijakan Akses Penuh (Supaya tidak kena error RLS)
 ALTER TABLE public.stok_barang DISABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Akses Penuh Stok Barang" ON public.stok_barang;
+CREATE POLICY "Akses Penuh Stok Barang" ON public.stok_barang
+FOR ALL
+TO public
+USING (true)
+WITH CHECK (true);
 
 -- Indeks untuk pencarian cepat
 CREATE INDEX IF NOT EXISTS idx_stok_kategori ON public.stok_barang (kategori);
