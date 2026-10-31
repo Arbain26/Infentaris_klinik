@@ -57,8 +57,16 @@ Buka browser dan akses: `http://localhost:3000`
 
 ---
 
+## 🌐 Panduan Hosting di Server VPS / SSH
+Ingin mendeploy aplikasi ini ke VPS Linux / akun hosting SSH Anda dengan domain sendiri dan SSL HTTPS gratis?
+👉 Silakan baca panduan langkah-demi-langkah di: **[PANDUAN_HOSTING_SSH.md](PANDUAN_HOSTING_SSH.md)**
+
+---
+
 ## 📁 Struktur Berkas
+- `PANDUAN_HOSTING_SSH.md`: Panduan lengkap hosting di VPS/Server via SSH (Node.js, PM2, Nginx, Certbot SSL).
 - `database.sql`: Skema tabel dan seed data awal MySQL.
+- `supabase.sql`: Skema tabel dan seed data PostgreSQL (Supabase Cloud).
 - `package.json`: Konfigurasi dependensi Express, mysql2, cors, dan dotenv.
-- `server.js`: Backend Node.js + Express + REST API CRUD + MySQL Connection Pool.
-- `index.html`: Frontend Single-File responsif dengan Tailwind CSS, sistem tab, filter, modal CRUD, dan fungsi ekspor PDF & Excel.
+- `server.js`: Backend Node.js + Express + REST API CRUD (Supabase & MySQL).
+- `index.html`: Frontend Single-File responsif dengan Tailwind CSS, sistem tab, modal CRUD, dan ekspor laporan.
