@@ -5,19 +5,24 @@ Aplikasi web modern, cepat, dan siap online untuk pencatatan inventaris barang, 
 ---
 
 ## 🌟 Fitur Utama
-1. **Pencatatan Inventaris & Pengeluaran**:
+1. **Manajemen Stok & Barang Tersedia di Klinik (Non-Kas)**:
+   - Pencatatan aset, peralatan medis, obat/BHP, dan stok barang yang **sudah ada di klinik**.
+   - Terisolasi penuh dari pencatatan arus kas (tidak dihitung sebagai pemasukan uang kas maupun pengeluaran kas operasional berjalan).
+   - Dilengkapi 4 kartu ringkasan fisik: Total Ragam Barang, Total Unit Fisik, Kondisi Baik, dan Perlu Perbaikan.
+   - Filter cepat berdasarkan kategori, lokasi ruangan, kondisi, serta pencarian instan nama/kode barang.
+2. **Pencatatan Inventaris & Pengeluaran**:
    - Pengelompokan (*grouping*) otomatis berdasarkan kategori barang.
    - Penghitungan sub-total per kategori dan grand total pengeluaran.
-2. **Pengelolaan Kas Masuk & Saldo Real-Time**:
+3. **Pengelolaan Kas Masuk & Saldo Real-Time**:
    - Pencatatan dana masuk / saldo kas operasional.
    - Perhitungan otomatis sisa saldo kas: `Pemasukan - Pengeluaran`.
-3. **Kop Surat & Logo Resmi Terintegrasi**:
+4. **Kop Surat & Logo Resmi Terintegrasi**:
    - Memuat logo dan identitas resmi Klinik Pratama Aisyiyah Pangkajene.
    - Blok tanda tangan resmi Kepala Klinik (*dengan SIP*) dan Pemegang Barang.
-4. **Ekspor Laporan Resmi Canggih**:
+5. **Ekspor Laporan Resmi Canggih**:
    - **Excel (.xlsx)**: Menggunakan ExcelJS dengan logo gambar resmi tersemat, styling border, merge cell, format Rupiah asli, dan tanda tangan.
    - **PDF (.pdf)**: Menggunakan jsPDF + AutoTable siap cetak dengan logo, garis ganda resmi, dan tabel terformat rapi.
-5. **Pengaturan Dinamis**:
+6. **Pengaturan Dinamis**:
    - Nama klinik, alamat, email, telepon, dan nama/jabatan penandatangan dapat disesuaikan langsung lewat modal pengaturan.
 
 ---

@@ -123,7 +123,14 @@
             <span class="hidden sm:inline">Pengaturan</span>
           </button>
 
-          <!-- Tombol Tambah Transaksi -->
+          <!-- Tombol Tambah Barang Klinik (Baru: Non-Kas) -->
+          <button onclick="openModalTambahStok()" title="Tambah Barang yang Sudah Tersedia di Klinik (Tidak Mempengaruhi Kas)"
+            class="inline-flex items-center px-3.5 py-2 text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 shadow-sm transition-all hover:shadow">
+            <i class="fa-solid fa-boxes-stacked mr-1.5 text-indigo-600"></i>
+            <span>+ Barang Klinik</span>
+          </button>
+
+          <!-- Tombol Tambah Transaksi Kas -->
           <button onclick="openModalTambah()"
             class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm shadow-emerald-600/30 transition-all hover:shadow-md">
             <i class="fa-solid fa-circle-plus mr-2 text-sm"></i>
@@ -295,23 +302,33 @@
       </div>
     </section>
 
-    <!-- TAB TAMPILAN (Laporan Pengeluaran Grouping vs Riwayat Dana Masuk) -->
-    <div class="flex items-center justify-between mb-4">
-      <div class="inline-flex p-1 bg-slate-200/80 rounded-xl space-x-1">
+    <!-- TAB TAMPILAN -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+      <div class="inline-flex p-1 bg-slate-200/80 rounded-xl space-x-1 overflow-x-auto max-w-full">
+        <!-- TAB 1: STOK & BARANG TERSEDIA (NON-KAS) -->
+        <button id="tabStokBtn" onclick="switchTab('stok')"
+          class="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900 whitespace-nowrap">
+          <i class="fa-solid fa-boxes-stacked mr-1.5 text-indigo-600"></i>
+          Stok & Barang Tersedia (Klinik)
+        </button>
+
+        <!-- TAB 2: LAPORAN PENGELUARAN & INVENTARIS -->
         <button id="tabPengeluaranBtn" onclick="switchTab('pengeluaran')"
-          class="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm">
-          <i class="fa-solid fa-boxes-stacked mr-1.5 text-emerald-600"></i>
+          class="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm whitespace-nowrap">
+          <i class="fa-solid fa-receipt mr-1.5 text-rose-600"></i>
           Laporan Inventaris & Pengeluaran
         </button>
+
+        <!-- TAB 3: DANA MASUK / PEMASUKAN KAS -->
         <button id="tabPemasukanBtn" onclick="switchTab('pemasukan')"
-          class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900">
-          <i class="fa-solid fa-money-bill-transfer mr-1.5 text-emerald-600"></i>
-          Dana Masuk / Pemasukan
+          class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 whitespace-nowrap">
+          <i class="fa-solid fa-vault mr-1.5 text-emerald-600"></i>
+          Dana Masuk / Pemasukan Kas
         </button>
       </div>
 
-      <div class="text-xs font-semibold text-slate-500 hidden sm:block">
-        Format Resmi Grouping per Kategori
+      <div class="text-xs font-semibold text-slate-500 hidden lg:block">
+        Format Resmi Klinik Pratama Aisyiyah
       </div>
     </div>
 
@@ -489,6 +506,161 @@
 
     </div>
 
+    <!-- VIEW 3: TABEL STOK & BARANG TERSEDIA DI KLINIK (INVENTARIS FISIK NON-KAS) -->
+    <div id="viewStokBarang" class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden mb-12 hidden">
+
+      <!-- Header Info Bar -->
+      <div class="px-6 py-5 bg-gradient-to-r from-indigo-50/70 via-slate-50 to-teal-50/50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600 text-white shadow-sm">
+              <i class="fa-solid fa-boxes-stacked text-sm"></i>
+            </span>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900 uppercase tracking-wide">
+              Inventaris Stok & Barang Tersedia di Klinik
+            </h2>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+              Non-Kas / Stok Fisik
+            </span>
+          </div>
+          <p class="text-xs text-slate-600 mt-1 max-w-2xl">
+            Pencatatan aset alat medis, peralatan kantor, dan inventaris yang <strong>sudah tersedia di klinik</strong>.
+            <span class="text-emerald-700 font-semibold">TIDAK mempengaruhi arus kas atau saldo operasional.</span>
+          </p>
+        </div>
+
+        <!-- Tombol Aksi Tambah Stok -->
+        <div class="flex items-center gap-2 shrink-0">
+          <button onclick="openModalTambahStok()"
+            class="inline-flex items-center px-4 py-2 text-xs sm:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm shadow-indigo-600/30 transition-all hover:shadow-md">
+            <i class="fa-solid fa-circle-plus mr-1.5 text-sm"></i>
+            <span>Tambah Barang Klinik</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Mini Summary Cards untuk Stok Klinik -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 p-5 bg-slate-50/60 border-b border-slate-200">
+        <!-- Card 1: Total Ragam Barang -->
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Ragam Barang</span>
+            <div class="text-xl font-extrabold text-slate-900 mt-0.5" id="stokTotalRagam">0 Item</div>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+        </div>
+
+        <!-- Card 2: Total Unit / Kuantitas Fisik -->
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Fisik / Unit</span>
+            <div class="text-xl font-extrabold text-emerald-700 mt-0.5" id="stokTotalFisik">0 Unit</div>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-cubes"></i>
+          </div>
+        </div>
+
+        <!-- Card 3: Kondisi Baik -->
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Kondisi Baik</span>
+            <div class="text-xl font-extrabold text-blue-700 mt-0.5" id="stokKondisiBaik">0 Unit</div>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+        </div>
+
+        <!-- Card 4: Perlu Perbaikan -->
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Perlu Perbaikan</span>
+            <div class="text-xl font-extrabold text-rose-600 mt-0.5" id="stokKondisiRusak">0 Unit</div>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter & Search Toolbar untuk Stok Barang -->
+      <div class="p-4 bg-white border-b border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <!-- Live Search -->
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+          <input type="text" id="filterStokSearch" oninput="applyFiltersStok()" placeholder="Cari nama barang, kode aset, atau lokasi ruangan..."
+            class="w-full text-xs sm:text-sm pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-indigo-500 transition-colors">
+        </div>
+
+        <!-- Filter Dropdowns -->
+        <div class="grid grid-cols-3 gap-2">
+          <!-- Filter Kategori -->
+          <select id="filterStokKategori" onchange="applyFiltersStok()"
+            class="text-xs rounded-xl border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 py-2 px-2.5 border">
+            <option value="semua">Semua Kategori</option>
+          </select>
+
+          <!-- Filter Ruangan -->
+          <select id="filterStokRuangan" onchange="applyFiltersStok()"
+            class="text-xs rounded-xl border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 py-2 px-2.5 border">
+            <option value="semua">Semua Ruangan</option>
+          </select>
+
+          <!-- Filter Kondisi -->
+          <select id="filterStokKondisi" onchange="applyFiltersStok()"
+            class="text-xs rounded-xl border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 py-2 px-2.5 border">
+            <option value="semua">Semua Kondisi</option>
+            <option value="Baik">Kondisi Baik</option>
+            <option value="Rusak Ringan">Rusak Ringan</option>
+            <option value="Rusak Berat">Rusak Berat</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table Stok Barang -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm" id="tableStokBarang">
+          <thead>
+            <tr class="bg-slate-800 text-white text-xs uppercase tracking-wider">
+              <th scope="col" class="py-3 px-4 w-12 text-center font-bold">No</th>
+              <th scope="col" class="py-3 px-4 w-28 font-bold">Kode</th>
+              <th scope="col" class="py-3 px-4 font-bold">Nama Barang / Peralatan</th>
+              <th scope="col" class="py-3 px-4 w-32 font-bold">Kategori</th>
+              <th scope="col" class="py-3 px-4 w-28 text-center font-bold">Stok Fisik</th>
+              <th scope="col" class="py-3 px-4 w-28 text-center font-bold">Kondisi</th>
+              <th scope="col" class="py-3 px-4 w-40 font-bold">Lokasi / Ruangan</th>
+              <th scope="col" class="py-3 px-4 w-36 font-bold">Keterangan</th>
+              <th scope="col" class="py-3 px-4 w-24 text-center font-bold">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyStokBarang" class="divide-y divide-slate-100">
+            <!-- Diisi dinamis oleh JavaScript -->
+            <tr>
+              <td colspan="9" class="py-12 text-center text-slate-400">
+                <i class="fa-solid fa-spinner fa-spin text-2xl text-indigo-600 mb-2"></i>
+                <p>Memuat data stok barang klinik...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer Info Stok -->
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+        <div class="flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-info text-indigo-600"></i>
+          <span>Data barang di tab ini tersimpan permanen dan terisolasi dari laporan kas masuk/keluar.</span>
+        </div>
+        <div id="stokCountLabel" class="font-semibold text-slate-700">
+          Menampilkan 0 barang
+        </div>
+      </div>
+
+    </div>
+
   </main>
 
   <!-- FOOTER -->
@@ -554,6 +726,17 @@
                 <i class="fa-solid fa-arrow-trend-up mr-1"></i> Dana Masuk / Pemasukan
               </div>
             </label>
+          </div>
+        </div>
+
+        <!-- Note Pembeda Stok Fisik vs Transaksi Kas -->
+        <div class="p-2.5 bg-amber-50 rounded-xl border border-amber-200/80 text-xs text-amber-800 flex items-start gap-2">
+          <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 shrink-0 text-xs"></i>
+          <div>
+            <span>Barang sudah tersedia di klinik & bukan transaksi kas?</span>
+            <button type="button" onclick="closeModalTransaksi(); openModalTambahStok();" class="text-indigo-700 font-bold underline hover:text-indigo-900 ml-1">
+              Catat di Stok & Barang Klinik &rarr;
+            </button>
           </div>
         </div>
 
@@ -655,6 +838,166 @@
           <button type="submit" id="btnSubmitTransaksi"
             class="px-5 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-all">
             Simpan Transaksi
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- MODAL: FORM STOK & BARANG TERSEDIA DI KLINIK (NON-KAS) -->
+  <!-- ==================================================================== -->
+  <div id="modalStokBarang"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div
+      class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden transform transition-all my-8">
+
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-boxes-stacked" id="modalStokIcon"></i>
+          </div>
+          <div>
+            <h3 id="modalStokTitle" class="text-base font-bold text-slate-900">
+              Tambah Barang / Stok Klinik
+            </h3>
+            <p class="text-xs text-slate-500">Pendataan barang & inventaris yang sudah tersedia di klinik</p>
+          </div>
+        </div>
+        <button onclick="closeModalStok()"
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Form Body -->
+      <form id="formStokBarang" onsubmit="submitFormStok(event)" class="p-6 space-y-4">
+        <input type="hidden" id="stokId" value="">
+
+        <!-- Banner Informasi Bebas Kas -->
+        <div class="p-3 bg-indigo-50/80 rounded-xl border border-indigo-200 text-xs text-indigo-900 flex items-start gap-2.5">
+          <i class="fa-solid fa-shield-halved text-indigo-600 text-sm mt-0.5 shrink-0"></i>
+          <div>
+            <strong>Aman dari Arus Kas:</strong> Barang yang dicatat di sini adalah aset yang <strong>sudah ada di klinik</strong>. Tidak akan masuk sebagai pemasukan kas maupun mengurangi saldo operasional.
+          </div>
+        </div>
+
+        <!-- Grid: Kode Barang & Tanggal Pendataan -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="inputKodeBarang" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Kode Barang
+            </label>
+            <input type="text" id="inputKodeBarang" placeholder="Contoh: MED-001 (Otomatis)"
+              class="w-full text-sm uppercase rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors">
+          </div>
+          <div>
+            <label for="inputTanggalMasuk" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Tanggal Terdata <span class="text-rose-500">*</span>
+            </label>
+            <input type="date" id="inputTanggalMasuk" required
+              class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors">
+          </div>
+        </div>
+
+        <!-- Nama Barang / Alat -->
+        <div>
+          <label for="inputNamaBarang" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+            Nama Barang / Peralatan <span class="text-rose-500">*</span>
+          </label>
+          <input type="text" id="inputNamaBarang" required placeholder="Contoh: Tensimeter Digital Omron, Kursi Roda..."
+            class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors font-medium">
+        </div>
+
+        <!-- Grid: Kategori & Lokasi Ruangan -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="inputKategoriStok" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Kategori <span class="text-rose-500">*</span>
+            </label>
+            <input list="listKategoriStok" id="inputKategoriStok" required placeholder="Pilih kategori..."
+              class="w-full text-sm uppercase rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors">
+            <datalist id="listKategoriStok">
+              <option value="ALAT MEDIS">
+              <option value="ALAT KANTOR">
+              <option value="ALAT LISTRIK">
+              <option value="ALAT KEBERSIHAN">
+              <option value="MEUBEL & ASET">
+              <option value="OBAT & BHP">
+            </datalist>
+          </div>
+
+          <div>
+            <label for="inputRuanganStok" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Ruangan / Penempatan <span class="text-rose-500">*</span>
+            </label>
+            <input list="listRuanganStok" id="inputRuanganStok" required placeholder="Poli Umum..."
+              class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors">
+            <datalist id="listRuanganStok">
+              <option value="Poli Umum">
+              <option value="Ruang Tindakan / IGD">
+              <option value="Ruang Dokter">
+              <option value="Apotek / Farmasi">
+              <option value="Tata Usaha / Kantor">
+              <option value="Front Office / Resepsionis">
+              <option value="Ruang Timbang Pasien">
+              <option value="Gudang">
+            </datalist>
+          </div>
+        </div>
+
+        <!-- Grid: Jumlah (Stok) & Satuan & Kondisi -->
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label for="inputJumlahStok" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Jumlah Stok <span class="text-rose-500">*</span>
+            </label>
+            <input type="number" id="inputJumlahStok" required min="1" value="1"
+              class="w-full text-sm font-bold text-center rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors">
+          </div>
+
+          <div>
+            <label for="inputSatuanStok" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Satuan <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="inputSatuanStok" required value="unit" placeholder="unit, set, buah..."
+              class="w-full text-sm text-center rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors">
+          </div>
+
+          <div>
+            <label for="inputKondisiStok" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+              Kondisi <span class="text-rose-500">*</span>
+            </label>
+            <select id="inputKondisiStok"
+              class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-2.5 border transition-colors bg-white font-medium">
+              <option value="Baik">Baik</option>
+              <option value="Rusak Ringan">Rusak Ringan</option>
+              <option value="Rusak Berat">Rusak Berat</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Keterangan -->
+        <div>
+          <label for="inputKeteranganStok" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+            Keterangan / Status Asal
+          </label>
+          <input type="text" id="inputKeteranganStok" placeholder="Contoh: Stok Awal Klinik, Hibah, Inventaris Siap Pakai..."
+            class="w-full text-sm rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border transition-colors">
+        </div>
+
+        <!-- Tombol Aksi Modal -->
+        <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+          <button type="button" onclick="closeModalStok()"
+            class="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors">
+            Batal
+          </button>
+          <button type="submit" id="btnSubmitStok"
+            class="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-all flex items-center gap-2">
+            <i class="fa-solid fa-check"></i>
+            <span>Simpan ke Stok Klinik</span>
           </button>
         </div>
 
@@ -933,7 +1276,9 @@
     // State Global Aplikasi
     let allTransactions = [];
     let filteredTransactions = [];
-    let currentTab = 'pengeluaran'; // 'pengeluaran' atau 'pemasukan'
+    let allStokBarang = [];
+    let filteredStokBarang = [];
+    let currentTab = 'stok'; // Default tab: 'stok', 'pengeluaran', atau 'pemasukan'
     let clinicSettings = {
       nama_klinik: 'KLINIK AISYIYAH PANGKAJENE',
       alamat: 'Jl. Andi Cammi. No. 17 Pangkajene Kabupaten Sidenreng Rappang, Provinsi Sulawesi Selatan',
@@ -1413,21 +1758,381 @@
     // Tab Switcher
     function switchTab(tab) {
       currentTab = tab;
+      const viewStokBarang = document.getElementById('viewStokBarang');
       const viewPengeluaran = document.getElementById('viewPengeluaran');
       const viewPemasukan = document.getElementById('viewPemasukan');
+      const tabStokBtn = document.getElementById('tabStokBtn');
       const tabPengeluaranBtn = document.getElementById('tabPengeluaranBtn');
       const tabPemasukanBtn = document.getElementById('tabPemasukanBtn');
 
-      if (tab === 'pengeluaran') {
-        viewPengeluaran.classList.remove('hidden');
-        viewPemasukan.classList.add('hidden');
-        tabPengeluaranBtn.className = 'px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm';
-        tabPemasukanBtn.className = 'px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900';
+      if (tab === 'stok') {
+        if (viewStokBarang) viewStokBarang.classList.remove('hidden');
+        if (viewPengeluaran) viewPengeluaran.classList.add('hidden');
+        if (viewPemasukan) viewPemasukan.classList.add('hidden');
+
+        if (tabStokBtn) tabStokBtn.className = 'px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all bg-white text-indigo-900 shadow-sm whitespace-nowrap';
+        if (tabPengeluaranBtn) tabPengeluaranBtn.className = 'px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 whitespace-nowrap';
+        if (tabPemasukanBtn) tabPemasukanBtn.className = 'px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 whitespace-nowrap';
+      } else if (tab === 'pengeluaran') {
+        if (viewStokBarang) viewStokBarang.classList.add('hidden');
+        if (viewPengeluaran) viewPengeluaran.classList.remove('hidden');
+        if (viewPemasukan) viewPemasukan.classList.add('hidden');
+
+        if (tabPengeluaranBtn) tabPengeluaranBtn.className = 'px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm whitespace-nowrap';
+        if (tabStokBtn) tabStokBtn.className = 'px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 whitespace-nowrap';
+        if (tabPemasukanBtn) tabPemasukanBtn.className = 'px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 whitespace-nowrap';
       } else {
-        viewPengeluaran.classList.add('hidden');
-        viewPemasukan.classList.remove('hidden');
-        tabPemasukanBtn.className = 'px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all bg-white text-emerald-800 shadow-sm';
-        tabPengeluaranBtn.className = 'px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900';
+        if (viewStokBarang) viewStokBarang.classList.add('hidden');
+        if (viewPengeluaran) viewPengeluaran.classList.add('hidden');
+        if (viewPemasukan) viewPemasukan.classList.remove('hidden');
+
+        if (tabPemasukanBtn) tabPemasukanBtn.className = 'px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all bg-white text-emerald-800 shadow-sm whitespace-nowrap';
+        if (tabStokBtn) tabStokBtn.className = 'px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 whitespace-nowrap';
+        if (tabPengeluaranBtn) tabPengeluaranBtn.className = 'px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 whitespace-nowrap';
+      }
+    }
+
+    // ====================================================================
+    // LOGIKA STOK & BARANG TERSEDIA DI KLINIK (NON-KAS)
+    // ====================================================================
+
+    // Ambil Data Stok Barang dari API
+    async function fetchStokBarang() {
+      try {
+        const res = await fetch('/api/stok-barang');
+        const json = await res.json();
+        if (json.success) {
+          allStokBarang = json.data || [];
+          populateStokFilterOptions();
+          applyFiltersStok();
+        } else {
+          showToast(json.message || 'Gagal memuat stok barang klinik', 'error');
+        }
+      } catch (err) {
+        console.error('Error fetch stok barang:', err);
+        showToast('Gagal terhubung ke database server', 'error');
+      }
+    }
+
+    // Populasi Filter Dropdown Kategori & Ruangan
+    function populateStokFilterOptions() {
+      const katSet = new Set();
+      const ruangSet = new Set();
+
+      allStokBarang.forEach(item => {
+        if (item.kategori) katSet.add(item.kategori.trim().toUpperCase());
+        if (item.ruangan) ruangSet.add(item.ruangan.trim());
+      });
+
+      const filterKat = document.getElementById('filterStokKategori');
+      if (filterKat) {
+        const cur = filterKat.value;
+        let html = '<option value="semua">Semua Kategori</option>';
+        Array.from(katSet).sort().forEach(k => {
+          html += `<option value="${escapeHtml(k)}" ${cur === k ? 'selected' : ''}>${escapeHtml(k)}</option>`;
+        });
+        filterKat.innerHTML = html;
+      }
+
+      const filterRuang = document.getElementById('filterStokRuangan');
+      if (filterRuang) {
+        const cur = filterRuang.value;
+        let html = '<option value="semua">Semua Ruangan</option>';
+        Array.from(ruangSet).sort().forEach(r => {
+          html += `<option value="${escapeHtml(r)}" ${cur === r ? 'selected' : ''}>${escapeHtml(r)}</option>`;
+        });
+        filterRuang.innerHTML = html;
+      }
+    }
+
+    // Terapkan Filter & Pencarian pada Stok Barang
+    function applyFiltersStok() {
+      const search = (document.getElementById('filterStokSearch')?.value || '').toLowerCase().trim();
+      const kategori = document.getElementById('filterStokKategori')?.value || 'semua';
+      const ruangan = document.getElementById('filterStokRuangan')?.value || 'semua';
+      const kondisi = document.getElementById('filterStokKondisi')?.value || 'semua';
+
+      filteredStokBarang = allStokBarang.filter(item => {
+        if (kategori !== 'semua' && (item.kategori || '').toUpperCase() !== kategori.toUpperCase()) return false;
+        if (ruangan !== 'semua' && (item.ruangan || '') !== ruangan) return false;
+        if (kondisi !== 'semua' && (item.kondisi || '') !== kondisi) return false;
+
+        if (search !== '') {
+          const nama = (item.nama_barang || '').toLowerCase();
+          const kode = (item.kode_barang || '').toLowerCase();
+          const ket = (item.keterangan || '').toLowerCase();
+          const r = (item.ruangan || '').toLowerCase();
+          if (!nama.includes(search) && !kode.includes(search) && !ket.includes(search) && !r.includes(search)) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      updateStokSummaryCards();
+      renderStokTable();
+    }
+
+    // Update 4 Mini Stat Card
+    function updateStokSummaryCards() {
+      const totalRagam = filteredStokBarang.length;
+      let totalFisik = 0;
+      let kondisiBaik = 0;
+      let kondisiRusak = 0;
+
+      filteredStokBarang.forEach(item => {
+        const jml = parseInt(item.jumlah, 10) || 0;
+        totalFisik += jml;
+        if (item.kondisi === 'Baik') {
+          kondisiBaik += jml;
+        } else {
+          kondisiRusak += jml;
+        }
+      });
+
+      const elRagam = document.getElementById('stokTotalRagam');
+      if (elRagam) elRagam.innerText = `${totalRagam} Item`;
+
+      const elFisik = document.getElementById('stokTotalFisik');
+      if (elFisik) elFisik.innerText = `${totalFisik} Unit`;
+
+      const elBaik = document.getElementById('stokKondisiBaik');
+      if (elBaik) elBaik.innerText = `${kondisiBaik} Unit`;
+
+      const elRusak = document.getElementById('stokKondisiRusak');
+      if (elRusak) elRusak.innerText = `${kondisiRusak} Unit`;
+
+      const elLabel = document.getElementById('stokCountLabel');
+      if (elLabel) elLabel.innerText = `Menampilkan ${filteredStokBarang.length} dari total ${allStokBarang.length} barang klinik`;
+    }
+
+    // Render Tabel Stok Barang
+    function renderStokTable() {
+      const tbody = document.getElementById('tbodyStokBarang');
+      if (!tbody) return;
+
+      if (filteredStokBarang.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="py-12 text-center text-slate-400">
+              <i class="fa-solid fa-boxes-stacked text-3xl mb-2 text-indigo-300"></i>
+              <p class="font-medium text-slate-600">Belum ada barang pada filter yang dipilih</p>
+              <button onclick="openModalTambahStok()" class="mt-3 inline-flex items-center px-3.5 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 rounded-lg hover:bg-indigo-100 border border-indigo-200">
+                <i class="fa-solid fa-plus mr-1.5"></i> Tambah Barang Sekarang
+              </button>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      let html = '';
+      filteredStokBarang.forEach((item, index) => {
+        const isEven = index % 2 === 0;
+        const bgClass = isEven ? 'bg-white' : 'bg-slate-50/50';
+
+        // Badge Kondisi
+        let badgeKondisi = '';
+        if (item.kondisi === 'Baik') {
+          badgeKondisi = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fa-solid fa-circle-check mr-1 text-[9px]"></i> Baik</span>';
+        } else if (item.kondisi === 'Rusak Ringan') {
+          badgeKondisi = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200"><i class="fa-solid fa-triangle-exclamation mr-1 text-[9px]"></i> Rusak Ringan</span>';
+        } else {
+          badgeKondisi = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200"><i class="fa-solid fa-circle-xmark mr-1 text-[9px]"></i> Rusak Berat</span>';
+        }
+
+        html += `
+          <tr class="${bgClass} hover:bg-indigo-50/40 transition-colors border-b border-slate-100">
+            <td class="py-3 px-4 text-center font-medium text-slate-500 text-xs">${index + 1}</td>
+            <td class="py-3 px-4 whitespace-nowrap text-xs font-mono font-semibold text-slate-700">
+              <span class="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-800">${escapeHtml(item.kode_barang || 'BRG-' + item.id)}</span>
+            </td>
+            <td class="py-3 px-4 text-slate-900 font-bold text-sm">
+              ${escapeHtml(item.nama_barang)}
+            </td>
+            <td class="py-3 px-4 whitespace-nowrap">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                ${escapeHtml(item.kategori || 'UMUM')}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-center whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-800 border border-slate-200">
+                ${item.jumlah} <span class="font-normal text-[11px] text-slate-500 ml-1">${escapeHtml(item.satuan || 'unit')}</span>
+              </span>
+            </td>
+            <td class="py-3 px-4 text-center whitespace-nowrap">
+              ${badgeKondisi}
+            </td>
+            <td class="py-3 px-4 text-slate-700 text-xs whitespace-nowrap">
+              <span class="inline-flex items-center gap-1 font-medium">
+                <i class="fa-solid fa-location-dot text-indigo-500 text-[11px]"></i>
+                ${escapeHtml(item.ruangan || 'Poli Umum')}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-slate-600 text-xs">
+              ${escapeHtml(item.keterangan || '-')}
+            </td>
+            <td class="py-3 px-4 text-center whitespace-nowrap">
+              <div class="inline-flex items-center gap-1.5">
+                <button onclick="editStok(${item.id})" title="Edit Barang" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-indigo-100 hover:text-indigo-700 text-slate-600 flex items-center justify-center transition-colors">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+                <button onclick="hapusStok(${item.id})" title="Hapus Barang" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-100 hover:text-rose-700 text-slate-600 flex items-center justify-center transition-colors">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // Modal Form Stok Handlers
+    function openModalTambahStok() {
+      document.getElementById('stokId').value = '';
+      document.getElementById('formStokBarang').reset();
+
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('inputTanggalMasuk').value = today;
+      document.getElementById('inputKodeBarang').value = 'MED-' + Math.floor(100 + Math.random() * 900);
+      document.getElementById('inputJumlahStok').value = 1;
+      document.getElementById('inputSatuanStok').value = 'unit';
+      document.getElementById('inputKondisiStok').value = 'Baik';
+      document.getElementById('inputRuanganStok').value = 'Poli Umum';
+
+      document.getElementById('modalStokTitle').innerText = 'Tambah Barang / Stok Klinik';
+      document.getElementById('btnSubmitStok').innerHTML = '<i class="fa-solid fa-check"></i> <span>Simpan ke Stok Klinik</span>';
+
+      const modal = document.getElementById('modalStokBarang');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModalStok() {
+      const modal = document.getElementById('modalStokBarang');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function editStok(id) {
+      const item = allStokBarang.find(b => b.id === id);
+      if (!item) return;
+
+      document.getElementById('stokId').value = item.id;
+      document.getElementById('inputKodeBarang').value = item.kode_barang || '';
+      document.getElementById('inputTanggalMasuk').value = item.tanggal_masuk || new Date().toISOString().split('T')[0];
+      document.getElementById('inputNamaBarang').value = item.nama_barang || '';
+      document.getElementById('inputKategoriStok').value = item.kategori || '';
+      document.getElementById('inputRuanganStok').value = item.ruangan || 'Poli Umum';
+      document.getElementById('inputJumlahStok').value = item.jumlah || 1;
+      document.getElementById('inputSatuanStok').value = item.satuan || 'unit';
+      document.getElementById('inputKondisiStok').value = item.kondisi || 'Baik';
+      document.getElementById('inputKeteranganStok').value = item.keterangan || '';
+
+      document.getElementById('modalStokTitle').innerText = `Edit Barang: ${item.nama_barang}`;
+      document.getElementById('btnSubmitStok').innerHTML = '<i class="fa-solid fa-check"></i> <span>Perbarui Barang</span>';
+
+      const modal = document.getElementById('modalStokBarang');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    async function hapusStok(id) {
+      const item = allStokBarang.find(b => b.id === id);
+      const nama = item ? item.nama_barang : 'barang ini';
+
+      if (!confirm(`Apakah Anda yakin ingin menghapus "${nama}" dari daftar stok klinik?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/stok-barang/${id}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) {
+          showToast('Data stok barang berhasil dihapus');
+          await fetchStokBarang();
+        } else {
+          showToast(json.message || 'Gagal menghapus stok barang', 'error');
+        }
+      } catch (err) {
+        console.error('Error hapus stok barang:', err);
+        showToast('Gagal menghapus stok barang', 'error');
+      }
+    }
+
+    async function submitFormStok(e) {
+      e.preventDefault();
+
+      const id = document.getElementById('stokId').value;
+      const kode_barang = document.getElementById('inputKodeBarang').value.trim();
+      const tanggal_masuk = document.getElementById('inputTanggalMasuk').value;
+      const nama_barang = document.getElementById('inputNamaBarang').value.trim();
+      const kategori = document.getElementById('inputKategoriStok').value.trim().toUpperCase();
+      const ruangan = document.getElementById('inputRuanganStok').value.trim();
+      const jumlah = parseInt(document.getElementById('inputJumlahStok').value, 10) || 1;
+      const satuan = document.getElementById('inputSatuanStok').value.trim() || 'unit';
+      const kondisi = document.getElementById('inputKondisiStok').value;
+      const keterangan = document.getElementById('inputKeteranganStok').value.trim();
+
+      if (!nama_barang || !kategori) {
+        showToast('Lengkapi nama barang dan kategori', 'error');
+        return;
+      }
+
+      const payload = {
+        kode_barang,
+        tanggal_masuk,
+        nama_barang,
+        kategori,
+        ruangan,
+        jumlah,
+        satuan,
+        kondisi,
+        keterangan
+      };
+
+      const btn = document.getElementById('btnSubmitStok');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...';
+      }
+
+      try {
+        let res;
+        if (id) {
+          res = await fetch(`/api/stok-barang/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          res = await fetch('/api/stok-barang', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+
+        const json = await res.json();
+        if (json.success) {
+          showToast(id ? 'Data barang berhasil diperbarui' : 'Barang baru berhasil ditambahkan ke inventaris klinik');
+          closeModalStok();
+          await fetchStokBarang();
+        } else {
+          showToast((json.message || 'Gagal menyimpan barang') + (json.error ? ': ' + json.error : ''), 'error');
+        }
+      } catch (err) {
+        console.error('Error simpan stok barang:', err);
+        showToast('Terjadi kesalahan jaringan', 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = id
+            ? '<i class="fa-solid fa-check"></i> <span>Perbarui Barang</span>'
+            : '<i class="fa-solid fa-check"></i> <span>Simpan ke Stok Klinik</span>';
+        }
       }
     }
 
@@ -2724,10 +3429,12 @@
       }
     }
 
-        // Inisialisasi saat Halaman Dimuat
+    // Inisialisasi saat Halaman Dimuat
     document.addEventListener('DOMContentLoaded', async () => {
       await fetchPengaturan();
       await fetchTransaksi();
+      await fetchStokBarang();
+      switchTab('stok'); // Buka tab Stok & Barang Tersedia secara default
     });
   </script>
 

@@ -115,6 +115,39 @@ async function initMysqlDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
+    // Inisialisasi Tabel Stok & Barang Tersedia di Klinik
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS \`stok_barang\` (
+        \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+        \`kode_barang\` VARCHAR(50),
+        \`nama_barang\` VARCHAR(255) NOT NULL,
+        \`kategori\` VARCHAR(100) NOT NULL,
+        \`jumlah\` INT NOT NULL DEFAULT 1,
+        \`satuan\` VARCHAR(50) DEFAULT 'unit',
+        \`kondisi\` ENUM('Baik', 'Rusak Ringan', 'Rusak Berat') DEFAULT 'Baik',
+        \`ruangan\` VARCHAR(100) DEFAULT 'Poli Umum',
+        \`tanggal_masuk\` DATE DEFAULT (CURRENT_DATE),
+        \`keterangan\` VARCHAR(255),
+        \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    const [stokRows] = await connection.query('SELECT COUNT(*) AS count FROM `stok_barang`');
+    if (stokRows[0].count === 0) {
+      await connection.query(`
+        INSERT INTO \`stok_barang\` (\`kode_barang\`, \`nama_barang\`, \`kategori\`, \`jumlah\`, \`satuan\`, \`kondisi\`, \`ruangan\`, \`tanggal_masuk\`, \`keterangan\`) VALUES
+        ('MED-001', 'Tensimeter Digital Omron HEM-7120', 'ALAT MEDIS', 3, 'unit', 'Baik', 'Poli Umum', '2026-01-10', 'Stok Awal Klinik / Siap Pakai'),
+        ('MED-002', 'Stetoskop Littmann Classic III', 'ALAT MEDIS', 2, 'unit', 'Baik', 'Ruang Dokter', '2026-01-10', 'Inventaris Dokter Pemeriksa'),
+        ('MED-003', 'Termometer Gun Infrared Medis', 'ALAT MEDIS', 4, 'unit', 'Baik', 'Poli Umum & Skrining', '2026-02-01', 'Tersedia di meja skrining pasien'),
+        ('MED-004', 'Tabung Oksigen 1m3 Lengkap Regulator', 'ALAT MEDIS', 2, 'set', 'Baik', 'Ruang Tindakan / IGD', '2026-01-15', 'Stok Darurat IGD Standby'),
+        ('MED-005', 'Timbangan Badan & Pengukur Tinggi Dewasa', 'ALAT MEDIS', 1, 'unit', 'Baik', 'Ruang Timbang Pasien', '2026-01-10', 'Stok Ruang Pengukuran Fisik'),
+        ('KTR-001', 'Komputer Desktop PC Kasir & Pendaftaran', 'ALAT KANTOR', 2, 'set', 'Baik', 'Front Office / Resepsionis', '2026-01-05', 'Aset Administrasi Pasien'),
+        ('KTR-002', 'Printer Epson EcoTank L3210 All-in-One', 'ALAT KANTOR', 1, 'unit', 'Baik', 'Tata Usaha', '2026-01-05', 'Cetak Surat & Rekam Medis'),
+        ('MEB-001', 'Tempat Tidur Periksa Pasien (Bed Medis)', 'MEUBEL & ASET', 2, 'unit', 'Baik', 'Poli Umum & IGD', '2026-01-01', 'Aset Inventaris Ruang Pemeriksaan'),
+        ('MEB-002', 'Kursi Roda Pasien Standar Rumah Sakit', 'MEUBEL & ASET', 2, 'unit', 'Baik', 'Pintu Masuk Utama', '2026-01-12', 'Fasilitas Pasien Disabilitas / Lansia');
+      `);
+    }
+
     connection.release();
     console.log('✅ Berhasil terhubung ke database MySQL dan tabel siap digunakan.');
   } catch (err) {
@@ -648,7 +681,16 @@ app.put('/api/pengaturan', async (req, res) => {
  * Mengambil daftar kategori unik yang tersimpan
  */
 app.get('/api/kategori', async (req, res) => {
-  const defaultCategories = ['ALAT KANTOR', 'ALAT LISTRIK', 'ALAT KEBERSIHAN', 'TAGIHAN RUTIN', 'DANA MASUK'];
+  const defaultCategories = [
+    'ALAT MEDIS',
+    'ALAT KANTOR',
+    'ALAT LISTRIK',
+    'ALAT KEBERSIHAN',
+    'MEUBEL & ASET',
+    'OBAT & BHP',
+    'TAGIHAN RUTIN',
+    'DANA MASUK'
+  ];
   try {
     if (isSupabase) {
       const { data, error } = await supabase.from('transaksi').select('kategori');
@@ -671,6 +713,261 @@ app.get('/api/kategori', async (req, res) => {
   } catch (error) {
     console.error('Error GET /api/kategori:', error);
     res.status(500).json({ success: false, message: 'Gagal mengambil kategori', error: error.message });
+  }
+});
+
+// ====================================================================
+// REST API ENDPOINTS: STOK & BARANG TERSEDIA DI KLINIK (NON-KAS)
+// ====================================================================
+
+/**
+ * GET /api/stok-barang
+ * Mengambil daftar stok barang klinik dengan filter pencarian, kategori, kondisi, dan ruangan
+ */
+app.get('/api/stok-barang', async (req, res) => {
+  try {
+    const { kategori, kondisi, ruangan, search } = req.query;
+
+    if (isSupabase) {
+      let q = supabase.from('stok_barang').select('*');
+
+      if (kategori && kategori !== 'semua') q = q.eq('kategori', kategori);
+      if (kondisi && kondisi !== 'semua') q = q.eq('kondisi', kondisi);
+      if (ruangan && ruangan !== 'semua') q = q.eq('ruangan', ruangan);
+      if (search && search.trim() !== '') {
+        q = q.or(`nama_barang.ilike.%${search.trim()}%,kode_barang.ilike.%${search.trim()}%,keterangan.ilike.%${search.trim()}%`);
+      }
+
+      q = q.order('id', { ascending: false });
+
+      const { data, error } = await q;
+      if (error) throw error;
+
+      return res.json({ success: true, count: (data || []).length, data: data || [] });
+    }
+
+    // MySQL Query
+    let query = 'SELECT * FROM stok_barang WHERE 1=1';
+    const params = [];
+
+    if (kategori && kategori !== 'semua') {
+      query += ' AND kategori = ?';
+      params.push(kategori);
+    }
+
+    if (kondisi && kondisi !== 'semua') {
+      query += ' AND kondisi = ?';
+      params.push(kondisi);
+    }
+
+    if (ruangan && ruangan !== 'semua') {
+      query += ' AND ruangan = ?';
+      params.push(ruangan);
+    }
+
+    if (search && search.trim() !== '') {
+      query += ' AND (nama_barang LIKE ? OR kode_barang LIKE ? OR keterangan LIKE ?)';
+      params.push(`%${search.trim()}%`, `%${search.trim()}%`, `%${search.trim()}%`);
+    }
+
+    query += ' ORDER BY id DESC';
+
+    const [rows] = await pool.query(query, params);
+    res.json({ success: true, count: rows.length, data: rows });
+  } catch (error) {
+    console.error('Error GET /api/stok-barang:', error);
+    res.status(500).json({ success: false, message: 'Gagal mengambil data stok barang', error: error.message });
+  }
+});
+
+/**
+ * POST /api/stok-barang
+ * Menambahkan data stok barang fisik yang sudah ada di klinik
+ */
+app.post('/api/stok-barang', async (req, res) => {
+  try {
+    const { kode_barang, nama_barang, kategori, jumlah, satuan, kondisi, ruangan, tanggal_masuk, keterangan } = req.body;
+
+    if (!nama_barang || !kategori) {
+      return res.status(400).json({
+        success: false,
+        message: 'Nama barang dan kategori wajib diisi.'
+      });
+    }
+
+    const cleanKode = (kode_barang && kode_barang.trim())
+      ? kode_barang.trim().toUpperCase()
+      : 'BRG-' + Math.floor(1000 + Math.random() * 9000);
+    const cleanNama = nama_barang.trim();
+    const cleanKategori = kategori.trim().toUpperCase();
+    const cleanJumlah = Math.max(1, parseInt(jumlah, 10) || 1);
+    const cleanSatuan = (satuan && satuan.trim()) ? satuan.trim() : 'unit';
+    const cleanKondisi = ['Baik', 'Rusak Ringan', 'Rusak Berat'].includes(kondisi) ? kondisi : 'Baik';
+    const cleanRuangan = (ruangan && ruangan.trim()) ? ruangan.trim() : 'Poli Umum';
+    const cleanTanggal = tanggal_masuk || new Date().toISOString().split('T')[0];
+    const cleanKeterangan = (keterangan && keterangan.trim()) ? keterangan.trim() : 'Stok Awal Klinik';
+
+    if (isSupabase) {
+      const { data, error } = await supabase.from('stok_barang').insert([{
+        kode_barang: cleanKode,
+        nama_barang: cleanNama,
+        kategori: cleanKategori,
+        jumlah: cleanJumlah,
+        satuan: cleanSatuan,
+        kondisi: cleanKondisi,
+        ruangan: cleanRuangan,
+        tanggal_masuk: cleanTanggal,
+        keterangan: cleanKeterangan
+      }]).select().single();
+
+      if (error) throw error;
+
+      return res.status(201).json({
+        success: true,
+        message: 'Stok barang berhasil ditambahkan ke inventaris klinik.',
+        data
+      });
+    }
+
+    // MySQL Insert
+    const sql = `
+      INSERT INTO stok_barang (kode_barang, nama_barang, kategori, jumlah, satuan, kondisi, ruangan, tanggal_masuk, keterangan)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const [result] = await pool.query(sql, [
+      cleanKode, cleanNama, cleanKategori, cleanJumlah, cleanSatuan, cleanKondisi, cleanRuangan, cleanTanggal, cleanKeterangan
+    ]);
+
+    res.status(201).json({
+      success: true,
+      message: 'Stok barang berhasil ditambahkan ke inventaris klinik.',
+      data: {
+        id: result.insertId,
+        kode_barang: cleanKode,
+        nama_barang: cleanNama,
+        kategori: cleanKategori,
+        jumlah: cleanJumlah,
+        satuan: cleanSatuan,
+        kondisi: cleanKondisi,
+        ruangan: cleanRuangan,
+        tanggal_masuk: cleanTanggal,
+        keterangan: cleanKeterangan
+      }
+    });
+  } catch (error) {
+    console.error('Error POST /api/stok-barang:', error);
+    res.status(500).json({ success: false, message: 'Gagal menambahkan stok barang', error: error.message });
+  }
+});
+
+/**
+ * PUT /api/stok-barang/:id
+ * Memperbarui data stok barang klinik
+ */
+app.put('/api/stok-barang/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { kode_barang, nama_barang, kategori, jumlah, satuan, kondisi, ruangan, tanggal_masuk, keterangan } = req.body;
+
+    if (!nama_barang || !kategori) {
+      return res.status(400).json({
+        success: false,
+        message: 'Nama barang dan kategori wajib diisi.'
+      });
+    }
+
+    const cleanKode = (kode_barang && kode_barang.trim()) ? kode_barang.trim().toUpperCase() : 'BRG-' + id;
+    const cleanNama = nama_barang.trim();
+    const cleanKategori = kategori.trim().toUpperCase();
+    const cleanJumlah = Math.max(1, parseInt(jumlah, 10) || 1);
+    const cleanSatuan = (satuan && satuan.trim()) ? satuan.trim() : 'unit';
+    const cleanKondisi = ['Baik', 'Rusak Ringan', 'Rusak Berat'].includes(kondisi) ? kondisi : 'Baik';
+    const cleanRuangan = (ruangan && ruangan.trim()) ? ruangan.trim() : 'Poli Umum';
+    const cleanTanggal = tanggal_masuk || new Date().toISOString().split('T')[0];
+    const cleanKeterangan = (keterangan && keterangan.trim()) ? keterangan.trim() : 'Stok Awal Klinik';
+
+    if (isSupabase) {
+      const { data, error } = await supabase.from('stok_barang').update({
+        kode_barang: cleanKode,
+        nama_barang: cleanNama,
+        kategori: cleanKategori,
+        jumlah: cleanJumlah,
+        satuan: cleanSatuan,
+        kondisi: cleanKondisi,
+        ruangan: cleanRuangan,
+        tanggal_masuk: cleanTanggal,
+        keterangan: cleanKeterangan
+      }).eq('id', id).select().single();
+
+      if (error) throw error;
+
+      return res.json({
+        success: true,
+        message: 'Data stok barang berhasil diperbarui.',
+        data
+      });
+    }
+
+    // MySQL Update
+    const sql = `
+      UPDATE stok_barang
+      SET kode_barang = ?, nama_barang = ?, kategori = ?, jumlah = ?, satuan = ?, kondisi = ?, ruangan = ?, tanggal_masuk = ?, keterangan = ?
+      WHERE id = ?
+    `;
+    const [result] = await pool.query(sql, [
+      cleanKode, cleanNama, cleanKategori, cleanJumlah, cleanSatuan, cleanKondisi, cleanRuangan, cleanTanggal, cleanKeterangan, id
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Data stok barang tidak ditemukan.' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Data stok barang berhasil diperbarui.',
+      data: {
+        id: Number(id),
+        kode_barang: cleanKode,
+        nama_barang: cleanNama,
+        kategori: cleanKategori,
+        jumlah: cleanJumlah,
+        satuan: cleanSatuan,
+        kondisi: cleanKondisi,
+        ruangan: cleanRuangan,
+        tanggal_masuk: cleanTanggal,
+        keterangan: cleanKeterangan
+      }
+    });
+  } catch (error) {
+    console.error('Error PUT /api/stok-barang/:id:', error);
+    res.status(500).json({ success: false, message: 'Gagal memperbarui stok barang', error: error.message });
+  }
+});
+
+/**
+ * DELETE /api/stok-barang/:id
+ * Menghapus data stok barang
+ */
+app.delete('/api/stok-barang/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (isSupabase) {
+      const { error } = await supabase.from('stok_barang').delete().eq('id', id);
+      if (error) throw error;
+      return res.json({ success: true, message: 'Data stok barang berhasil dihapus.' });
+    }
+
+    // MySQL Delete
+    const [result] = await pool.query('DELETE FROM stok_barang WHERE id = ?', [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Data stok barang tidak ditemukan.' });
+    }
+
+    res.json({ success: true, message: 'Data stok barang berhasil dihapus.' });
+  } catch (error) {
+    console.error('Error DELETE /api/stok-barang/:id:', error);
+    res.status(500).json({ success: false, message: 'Gagal menghapus stok barang', error: error.message });
   }
 });
 

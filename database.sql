@@ -104,3 +104,39 @@ INSERT INTO `transaksi` (`tanggal`, `jenis`, `kategori`, `uraian`, `satuan`, `no
 ('2026-10-06', 'Pengeluaran', 'TAGIHAN RUTIN', 'Pembayaran Listrik PLN Pascabayar Klinik', 'bulan', 1450000, 'Transfer'),
 ('2026-10-06', 'Pengeluaran', 'TAGIHAN RUTIN', 'Tagihan Air Bersih PDAM Kab. Pangkajene', 'bulan', 320000, 'Transfer'),
 ('2026-10-08', 'Pengeluaran', 'TAGIHAN RUTIN', 'Langganan Internet Biznet Dedicated 50 Mbps', 'bulan', 450000, 'Transfer');
+
+-- --------------------------------------------------------------------
+-- 4. TABEL STOK & BARANG TERSEDIA DI KLINIK (INVENTARIS FISIK NON-KAS)
+-- Barang yang sudah ada di klinik dicatat di sini agar TIDAK mempengaruhi kas masuk/keluar
+-- --------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `stok_barang` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `kode_barang` VARCHAR(50),
+  `nama_barang` VARCHAR(255) NOT NULL,
+  `kategori` VARCHAR(100) NOT NULL,
+  `jumlah` INT NOT NULL DEFAULT 1,
+  `satuan` VARCHAR(50) DEFAULT 'unit',
+  `kondisi` ENUM('Baik', 'Rusak Ringan', 'Rusak Berat') DEFAULT 'Baik',
+  `ruangan` VARCHAR(100) DEFAULT 'Poli Umum',
+  `tanggal_masuk` DATE DEFAULT (CURRENT_DATE),
+  `keterangan` VARCHAR(255),
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Indeks untuk filter dan pencarian cepat
+CREATE INDEX IF NOT EXISTS `idx_stok_kategori` ON `stok_barang` (`kategori`);
+CREATE INDEX IF NOT EXISTS `idx_stok_ruangan` ON `stok_barang` (`ruangan`);
+CREATE INDEX IF NOT EXISTS `idx_stok_kondisi` ON `stok_barang` (`kondisi`);
+
+-- Seed Data Awal Stok Barang Klinik
+INSERT INTO `stok_barang` (`kode_barang`, `nama_barang`, `kategori`, `jumlah`, `satuan`, `kondisi`, `ruangan`, `tanggal_masuk`, `keterangan`) VALUES
+('MED-001', 'Tensimeter Digital Omron HEM-7120', 'ALAT MEDIS', 3, 'unit', 'Baik', 'Poli Umum', '2026-01-10', 'Stok Awal Klinik / Siap Pakai'),
+('MED-002', 'Stetoskop Littmann Classic III', 'ALAT MEDIS', 2, 'unit', 'Baik', 'Ruang Dokter', '2026-01-10', 'Inventaris Dokter Pemeriksa'),
+('MED-003', 'Termometer Gun Infrared Medis', 'ALAT MEDIS', 4, 'unit', 'Baik', 'Poli Umum & Skrining', '2026-02-01', 'Tersedia di meja skrining pasien'),
+('MED-004', 'Tabung Oksigen 1m3 Lengkap Regulator', 'ALAT MEDIS', 2, 'set', 'Baik', 'Ruang Tindakan / IGD', '2026-01-15', 'Stok Darurat IGD Standby'),
+('MED-005', 'Timbangan Badan & Pengukur Tinggi Dewasa', 'ALAT MEDIS', 1, 'unit', 'Baik', 'Ruang Timbang Pasien', '2026-01-10', 'Stok Ruang Pengukuran Fisik'),
+('KTR-001', 'Komputer Desktop PC Kasir & Pendaftaran', 'ALAT KANTOR', 2, 'set', 'Baik', 'Front Office / Resepsionis', '2026-01-05', 'Aset Administrasi Pasien'),
+('KTR-002', 'Printer Epson EcoTank L3210 All-in-One', 'ALAT KANTOR', 1, 'unit', 'Baik', 'Tata Usaha', '2026-01-05', 'Cetak Surat & Rekam Medis'),
+('MEB-001', 'Tempat Tidur Periksa Pasien (Bed Medis)', 'MEUBEL & ASET', 2, 'unit', 'Baik', 'Poli Umum & IGD', '2026-01-01', 'Aset Inventaris Ruang Pemeriksaan'),
+('MEB-002', 'Kursi Roda Pasien Standar Rumah Sakit', 'MEUBEL & ASET', 2, 'unit', 'Baik', 'Pintu Masuk Utama', '2026-01-12', 'Fasilitas Pasien Disabilitas / Lansia');
+
