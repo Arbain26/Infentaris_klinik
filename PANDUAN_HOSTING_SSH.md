@@ -224,7 +224,33 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-Sekarang coba buka domain Anda di browser: `http://domain-klinik-anda.com`.
+### 4. (Sangat Disarankan) Proteksi Kata Sandi Akses Staf (HTTP Basic Auth)
+Karena aplikasi belum memiliki sistem login mandiri di antarmuka web, lindungi website Anda dari akses publik liar di internet menggunakan HTTP Basic Authentication bawaan Nginx:
+```bash
+# 1. Pasang paket pendukung apache2-utils
+sudo apt install -y apache2-utils
+
+# 2. Buat akun akses untuk staf (contoh username: staf_klinik)
+sudo htpasswd -c /etc/nginx/.htpasswd staf_klinik
+# Masukkan password rahasia Anda saat diminta
+```
+
+Buka kembali file konfigurasi Nginx:
+```bash
+sudo nano /etc/nginx/sites-available/inventaris-klinik
+```
+Tambahkan dua baris berikut tepat di dalam blok `server { ... }`:
+```nginx
+    auth_basic "Akses Terbatas Staf Klinik";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+```
+Lalu uji dan muat ulang Nginx:
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Sekarang coba buka domain Anda di browser: `http://domain-klinik-anda.com`. Setiap pengguna akan diminta memasukkan username dan password staf klinik sebelum dapat melihat atau mengelola data inventaris.
 
 ---
 

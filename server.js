@@ -16,12 +16,73 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Sembunyikan identitas teknologi backend
+app.disable('x-powered-by');
 
-// Sajikan file statis (termasuk index.html) di root direktori
+// Security Headers Middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// Middleware Parsing & CORS
+app.use(cors());
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// In-Memory Rate Limiter (Proteksi Anti-Spam / DoS untuk Lingkungan VPS)
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // Jendela waktu: 1 menit
+const MAX_GLOBAL_REQ_PER_MIN = 120;     // Maksimum 120 request/menit untuk semua /api/
+const MAX_MUTATION_REQ_PER_MIN = 60;    // Maksimum 60 request/menit untuk POST/PUT/DELETE
+
+// Pembersihan berkala memori rate limit setiap 5 menit
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimitMap.entries()) {
+    if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}, 5 * 60 * 1000).unref(); // unref agar tidak menahan proses exit
+
+const rateLimiterMiddleware = (req, res, next) => {
+  // Hanya terapkan pembatasan pada endpoint API
+  if (!req.path.startsWith('/api/')) return next();
+
+  const forwardedFor = req.headers['x-forwarded-for'];
+  const clientIp = (forwardedFor ? forwardedFor.split(',')[0].trim() : req.socket.remoteAddress) || '127.0.0.1';
+  const now = Date.now();
+
+  let entry = rateLimitMap.get(clientIp);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    entry = { windowStart: now, count: 0, mutationCount: 0 };
+    rateLimitMap.set(clientIp, entry);
+  }
+
+  entry.count++;
+  const isMutation = ['POST', 'PUT', 'DELETE'].includes(req.method);
+  if (isMutation) {
+    entry.mutationCount++;
+  }
+
+  if (entry.count > MAX_GLOBAL_REQ_PER_MIN || entry.mutationCount > MAX_MUTATION_REQ_PER_MIN) {
+    return res.status(429).json({
+      success: false,
+      message: 'Terlalu banyak permintaan dari IP Anda. Mohon tunggu 1 menit sebelum mencoba kembali.'
+    });
+  }
+
+  next();
+};
+
+app.use(rateLimiterMiddleware);
+
+// Sajikan file statis publik & root direktori
+app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 
 // ====================================================================
@@ -161,20 +222,61 @@ async function initMysqlDatabase() {
 // ====================================================================
 
 /**
+ * Sanitasi string pencarian agar aman untuk sintaks Supabase/PostgREST .or()
+ * Menghilangkan karakter pembatas filter seperti koma, kurung, dan backslash
+ */
+function sanitizePostgrestSearch(str) {
+  if (!str) return '';
+  return str.replace(/[,()\\%]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Helper validasi ketat format dan keabsahan kalender tanggal (YYYY-MM-DD)
+ */
+function isValidDate(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+  const parts = dateStr.split('-').map(Number);
+  const y = parts[0], m = parts[1], d = parts[2];
+  if (m < 1 || m > 12 || d < 1 || d > 31) return false;
+  const parsed = new Date(Date.UTC(y, m - 1, d));
+  return parsed.getUTCFullYear() === y &&
+    (parsed.getUTCMonth() + 1) === m &&
+    parsed.getUTCDate() === d;
+}
+
+/**
+ * Sanitasi string dan batas panjang karakter untuk mencegah payload memory abuse
+ */
+function sanitizeString(val, maxLen = 255) {
+  if (val === null || val === undefined) return '';
+  return String(val).trim().slice(0, maxLen);
+}
+
+/**
  * GET /api/transaksi
- * Mengambil semua transaksi dengan opsi filter (tahun, bulan, jenis, kategori, search)
+ * Mengambil semua transaksi dengan opsi filter (tahun, bulan, jenis, kategori, search, rentang tanggal)
  */
 app.get('/api/transaksi', async (req, res) => {
   try {
-    const { tahun, bulan, jenis, kategori, search } = req.query;
+    const { tahun, bulan, jenis, kategori, search, dari_tanggal, sampai_tanggal, page, limit } = req.query;
+
+    const isPaginated = page !== undefined || limit !== undefined;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(500, Math.max(1, parseInt(limit, 10) || 50));
 
     if (isSupabase) {
       let q = supabase.from('transaksi').select('*');
 
       if (jenis && jenis !== 'semua') q = q.eq('jenis', jenis);
       if (kategori && kategori !== 'semua') q = q.eq('kategori', kategori);
+      if (dari_tanggal && isValidDate(dari_tanggal)) q = q.gte('tanggal', dari_tanggal);
+      if (sampai_tanggal && isValidDate(sampai_tanggal)) q = q.lte('tanggal', sampai_tanggal);
       if (search && search.trim() !== '') {
-        q = q.or(`uraian.ilike.%${search.trim()}%,kategori.ilike.%${search.trim()}%`);
+        const cleanSearch = sanitizePostgrestSearch(search);
+        if (cleanSearch) {
+          q = q.or(`uraian.ilike.%${cleanSearch}%,kategori.ilike.%${cleanSearch}%`);
+        }
       }
 
       q = q.order('tanggal', { ascending: true }).order('id', { ascending: true });
@@ -195,7 +297,20 @@ app.get('/api/transaksi', async (req, res) => {
         });
       }
 
-      return res.json({ success: true, count: items.length, data: items });
+      const totalCount = items.length;
+      const resultData = isPaginated ? items.slice((pageNum - 1) * limitNum, pageNum * limitNum) : items;
+
+      return res.json({
+        success: true,
+        count: resultData.length,
+        pagination: isPaginated ? {
+          page: pageNum,
+          limit: limitNum,
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / limitNum)
+        } : undefined,
+        data: resultData
+      });
     }
 
     // MySQL Query
@@ -210,6 +325,16 @@ app.get('/api/transaksi', async (req, res) => {
     if (bulan && bulan !== 'semua') {
       query += ' AND MONTH(tanggal) = ?';
       params.push(parseInt(bulan, 10));
+    }
+
+    if (dari_tanggal && isValidDate(dari_tanggal)) {
+      query += ' AND tanggal >= ?';
+      params.push(dari_tanggal);
+    }
+
+    if (sampai_tanggal && isValidDate(sampai_tanggal)) {
+      query += ' AND tanggal <= ?';
+      params.push(sampai_tanggal);
     }
 
     if (jenis && jenis !== 'semua') {
@@ -227,10 +352,33 @@ app.get('/api/transaksi', async (req, res) => {
       params.push(`%${search.trim()}%`, `%${search.trim()}%`);
     }
 
+    // Hitung total jika dipaginasi
+    let totalCount = 0;
+    if (isPaginated) {
+      const countQuery = query.replace('SELECT * FROM transaksi', 'SELECT COUNT(*) as total FROM transaksi');
+      const [countRows] = await pool.query(countQuery, params);
+      totalCount = countRows[0] ? countRows[0].total : 0;
+    }
+
     query += ' ORDER BY tanggal ASC, id ASC';
 
+    if (isPaginated) {
+      query += ' LIMIT ? OFFSET ?';
+      params.push(limitNum, (pageNum - 1) * limitNum);
+    }
+
     const [rows] = await pool.query(query, params);
-    res.json({ success: true, count: rows.length, data: rows });
+    res.json({
+      success: true,
+      count: rows.length,
+      pagination: isPaginated ? {
+        page: pageNum,
+        limit: limitNum,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limitNum)
+      } : undefined,
+      data: rows
+    });
   } catch (error) {
     console.error('Error GET /api/transaksi:', error);
     res.status(500).json({ success: false, message: 'Gagal mengambil data transaksi', error: error.message });
@@ -239,7 +387,7 @@ app.get('/api/transaksi', async (req, res) => {
 
 /**
  * POST /api/transaksi
- * Menambahkan data transaksi baru
+ * Menambahkan data transaksi baru dengan validasi ketat
  */
 app.post('/api/transaksi', async (req, res) => {
   try {
@@ -252,11 +400,26 @@ app.post('/api/transaksi', async (req, res) => {
       });
     }
 
+    if (!isValidDate(tanggal)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Format tanggal tidak valid. Gunakan format YYYY-MM-DD.'
+      });
+    }
+
+    const parsedNominal = parseInt(nominal, 10);
+    if (isNaN(parsedNominal) || parsedNominal < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Nominal transaksi harus berupa angka bilangan bulat positif (>= 0).'
+      });
+    }
+
     const cleanJenis = jenis === 'Pemasukan' ? 'Pemasukan' : 'Pengeluaran';
-    const cleanKategori = kategori.trim().toUpperCase();
-    const cleanUraian = uraian.trim();
-    const cleanSatuan = (satuan && satuan.trim()) ? satuan.trim() : '-';
-    const cleanNominal = Math.abs(parseInt(nominal, 10)) || 0;
+    const cleanKategori = sanitizeString(kategori, 100).toUpperCase();
+    const cleanUraian = sanitizeString(uraian, 500);
+    const cleanSatuan = sanitizeString(satuan, 50) || '-';
+    const cleanNominal = parsedNominal;
     const cleanMetode = metode === 'Transfer' ? 'Transfer' : 'Tunai';
 
     if (isSupabase) {
@@ -310,7 +473,7 @@ app.post('/api/transaksi', async (req, res) => {
 
 /**
  * PUT /api/transaksi/:id
- * Memperbarui data transaksi yang sudah ada
+ * Memperbarui data transaksi yang sudah ada dengan validasi ketat
  */
 app.put('/api/transaksi/:id', async (req, res) => {
   try {
@@ -324,11 +487,26 @@ app.put('/api/transaksi/:id', async (req, res) => {
       });
     }
 
+    if (!isValidDate(tanggal)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Format tanggal tidak valid. Gunakan format YYYY-MM-DD.'
+      });
+    }
+
+    const parsedNominal = parseInt(nominal, 10);
+    if (isNaN(parsedNominal) || parsedNominal < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Nominal transaksi harus berupa angka bilangan bulat positif (>= 0).'
+      });
+    }
+
     const cleanJenis = jenis === 'Pemasukan' ? 'Pemasukan' : 'Pengeluaran';
-    const cleanKategori = kategori.trim().toUpperCase();
-    const cleanUraian = uraian.trim();
-    const cleanSatuan = (satuan && satuan.trim()) ? satuan.trim() : '-';
-    const cleanNominal = Math.abs(parseInt(nominal, 10)) || 0;
+    const cleanKategori = sanitizeString(kategori, 100).toUpperCase();
+    const cleanUraian = sanitizeString(uraian, 500);
+    const cleanSatuan = sanitizeString(satuan, 50) || '-';
+    const cleanNominal = parsedNominal;
     const cleanMetode = metode === 'Transfer' ? 'Transfer' : 'Tunai';
 
     if (isSupabase) {
@@ -420,8 +598,8 @@ app.post('/api/transaksi/reset-saldo', async (req, res) => {
   try {
     const { target_saldo, tanggal, keterangan, mode } = req.body;
     const cleanTargetSaldo = Math.max(0, parseInt(target_saldo, 10) || 0);
-    const cleanTanggal = tanggal || new Date().toISOString().split('T')[0];
-    const cleanKeterangan = (keterangan && keterangan.trim()) ? keterangan.trim() : 'Saldo Awal Kas Klinik';
+    const cleanTanggal = (tanggal && isValidDate(tanggal)) ? tanggal : new Date().toISOString().split('T')[0];
+    const cleanKeterangan = sanitizeString(keterangan, 255) || 'Saldo Awal Kas Klinik';
     const isResetClean = mode === 'bersihkan_dan_set';
 
     if (isSupabase) {
@@ -496,59 +674,73 @@ app.post('/api/transaksi/reset-saldo', async (req, res) => {
       }
     }
 
-    // MySQL Logic
-    if (isResetClean) {
-      const [pengeluaranRows] = await pool.query(
-        "SELECT COALESCE(SUM(nominal), 0) AS total_pengeluaran FROM transaksi WHERE jenis = 'Pengeluaran'"
-      );
-      const totalPengeluaran = parseInt(pengeluaranRows[0].total_pengeluaran, 10) || 0;
+    // MySQL Logic dengan Atomic Transaction
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
 
-      await pool.query("DELETE FROM transaksi WHERE jenis = 'Pemasukan'");
+      if (isResetClean) {
+        const [pengeluaranRows] = await conn.query(
+          "SELECT COALESCE(SUM(nominal), 0) AS total_pengeluaran FROM transaksi WHERE jenis = 'Pengeluaran'"
+        );
+        const totalPengeluaran = parseInt(pengeluaranRows[0].total_pengeluaran, 10) || 0;
 
-      const nominalPemasukanBaru = cleanTargetSaldo + totalPengeluaran;
-      await pool.query(
-        "INSERT INTO transaksi (tanggal, jenis, kategori, uraian, satuan, nominal, metode) VALUES (?, 'Pemasukan', 'DANA MASUK', ?, '-', ?, 'Transfer')",
-        [cleanTanggal, cleanKeterangan, nominalPemasukanBaru]
-      );
+        await conn.query("DELETE FROM transaksi WHERE jenis = 'Pemasukan'");
 
-      return res.json({
-        success: true,
-        message: `Saldo kas berhasil diatur ulang menjadi Rp ${cleanTargetSaldo.toLocaleString('id-ID')}`,
-        data: {
-          target_saldo: cleanTargetSaldo,
-          nominal_pemasukan: nominalPemasukanBaru,
-          total_pengeluaran: totalPengeluaran
-        }
-      });
-    } else {
-      const [pemasukanRows] = await pool.query("SELECT COALESCE(SUM(nominal), 0) AS total FROM transaksi WHERE jenis = 'Pemasukan'");
-      const [pengeluaranRows] = await pool.query("SELECT COALESCE(SUM(nominal), 0) AS total FROM transaksi WHERE jenis = 'Pengeluaran'");
-
-      const totalPemasukan = parseInt(pemasukanRows[0].total, 10) || 0;
-      const totalPengeluaran = parseInt(pengeluaranRows[0].total, 10) || 0;
-      const currentSaldo = totalPemasukan - totalPengeluaran;
-      const selisih = cleanTargetSaldo - currentSaldo;
-
-      if (selisih > 0) {
-        await pool.query(
+        const nominalPemasukanBaru = cleanTargetSaldo + totalPengeluaran;
+        await conn.query(
           "INSERT INTO transaksi (tanggal, jenis, kategori, uraian, satuan, nominal, metode) VALUES (?, 'Pemasukan', 'DANA MASUK', ?, '-', ?, 'Transfer')",
-          [cleanTanggal, cleanKeterangan || 'Penyesuaian Tambahan Saldo Kas', selisih]
+          [cleanTanggal, cleanKeterangan, nominalPemasukanBaru]
         );
-      } else if (selisih < 0) {
-        await pool.query(
-          "INSERT INTO transaksi (tanggal, jenis, kategori, uraian, satuan, nominal, metode) VALUES (?, 'Pengeluaran', 'PENYESUAIAN KAS', ?, '-', ?, 'Tunai')",
-          [cleanTanggal, cleanKeterangan || 'Penyesuaian Koreksi Saldo Kas', Math.abs(selisih)]
-        );
-      }
 
-      return res.json({
-        success: true,
-        message: `Saldo kas berhasil disesuaikan menjadi Rp ${cleanTargetSaldo.toLocaleString('id-ID')}`,
-        data: {
-          target_saldo: cleanTargetSaldo,
-          selisih: selisih
+        await conn.commit();
+
+        return res.json({
+          success: true,
+          message: `Saldo kas berhasil diatur ulang menjadi Rp ${cleanTargetSaldo.toLocaleString('id-ID')}`,
+          data: {
+            target_saldo: cleanTargetSaldo,
+            nominal_pemasukan: nominalPemasukanBaru,
+            total_pengeluaran: totalPengeluaran
+          }
+        });
+      } else {
+        const [pemasukanRows] = await conn.query("SELECT COALESCE(SUM(nominal), 0) AS total FROM transaksi WHERE jenis = 'Pemasukan'");
+        const [pengeluaranRows] = await conn.query("SELECT COALESCE(SUM(nominal), 0) AS total FROM transaksi WHERE jenis = 'Pengeluaran'");
+
+        const totalPemasukan = parseInt(pemasukanRows[0].total, 10) || 0;
+        const totalPengeluaran = parseInt(pengeluaranRows[0].total, 10) || 0;
+        const currentSaldo = totalPemasukan - totalPengeluaran;
+        const selisih = cleanTargetSaldo - currentSaldo;
+
+        if (selisih > 0) {
+          await conn.query(
+            "INSERT INTO transaksi (tanggal, jenis, kategori, uraian, satuan, nominal, metode) VALUES (?, 'Pemasukan', 'DANA MASUK', ?, '-', ?, 'Transfer')",
+            [cleanTanggal, cleanKeterangan || 'Penyesuaian Tambahan Saldo Kas', selisih]
+          );
+        } else if (selisih < 0) {
+          await conn.query(
+            "INSERT INTO transaksi (tanggal, jenis, kategori, uraian, satuan, nominal, metode) VALUES (?, 'Pengeluaran', 'PENYESUAIAN KAS', ?, '-', ?, 'Tunai')",
+            [cleanTanggal, cleanKeterangan || 'Penyesuaian Koreksi Saldo Kas', Math.abs(selisih)]
+          );
         }
-      });
+
+        await conn.commit();
+
+        return res.json({
+          success: true,
+          message: `Saldo kas berhasil disesuaikan menjadi Rp ${cleanTargetSaldo.toLocaleString('id-ID')}`,
+          data: {
+            target_saldo: cleanTargetSaldo,
+            selisih: selisih
+          }
+        });
+      }
+    } catch (txErr) {
+      await conn.rollback();
+      throw txErr;
+    } finally {
+      conn.release();
     }
   } catch (error) {
     console.error('Error POST /api/transaksi/reset-saldo:', error);
@@ -726,24 +918,47 @@ app.get('/api/kategori', async (req, res) => {
  */
 app.get('/api/stok-barang', async (req, res) => {
   try {
-    const { kategori, kondisi, ruangan, search } = req.query;
+    const { kategori, kondisi, ruangan, search, page, limit } = req.query;
+
+    const isPaginated = page !== undefined || limit !== undefined;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(500, Math.max(1, parseInt(limit, 10) || 50));
 
     if (isSupabase) {
-      let q = supabase.from('stok_barang').select('*');
+      let q = supabase.from('stok_barang').select('*', { count: isPaginated ? 'exact' : undefined });
 
       if (kategori && kategori !== 'semua') q = q.eq('kategori', kategori);
       if (kondisi && kondisi !== 'semua') q = q.eq('kondisi', kondisi);
       if (ruangan && ruangan !== 'semua') q = q.eq('ruangan', ruangan);
       if (search && search.trim() !== '') {
-        q = q.or(`nama_barang.ilike.%${search.trim()}%,kode_barang.ilike.%${search.trim()}%,keterangan.ilike.%${search.trim()}%`);
+        const cleanSearch = sanitizePostgrestSearch(search);
+        if (cleanSearch) {
+          q = q.or(`nama_barang.ilike.%${cleanSearch}%,kode_barang.ilike.%${cleanSearch}%,keterangan.ilike.%${cleanSearch}%`);
+        }
       }
 
       q = q.order('id', { ascending: false });
 
-      const { data, error } = await q;
+      if (isPaginated) {
+        const from = (pageNum - 1) * limitNum;
+        const to = from + limitNum - 1;
+        q = q.range(from, to);
+      }
+
+      const { data, count, error } = await q;
       if (error) throw error;
 
-      return res.json({ success: true, count: (data || []).length, data: data || [] });
+      return res.json({
+        success: true,
+        count: (data || []).length,
+        pagination: isPaginated ? {
+          page: pageNum,
+          limit: limitNum,
+          total: count || (data || []).length,
+          totalPages: Math.ceil((count || (data || []).length) / limitNum)
+        } : undefined,
+        data: data || []
+      });
     }
 
     // MySQL Query
@@ -770,10 +985,32 @@ app.get('/api/stok-barang', async (req, res) => {
       params.push(`%${search.trim()}%`, `%${search.trim()}%`, `%${search.trim()}%`);
     }
 
+    let totalCount = 0;
+    if (isPaginated) {
+      const countQuery = query.replace('SELECT * FROM stok_barang', 'SELECT COUNT(*) as total FROM stok_barang');
+      const [countRows] = await pool.query(countQuery, params);
+      totalCount = countRows[0] ? countRows[0].total : 0;
+    }
+
     query += ' ORDER BY id DESC';
 
+    if (isPaginated) {
+      query += ' LIMIT ? OFFSET ?';
+      params.push(limitNum, (pageNum - 1) * limitNum);
+    }
+
     const [rows] = await pool.query(query, params);
-    res.json({ success: true, count: rows.length, data: rows });
+    res.json({
+      success: true,
+      count: rows.length,
+      pagination: isPaginated ? {
+        page: pageNum,
+        limit: limitNum,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limitNum)
+      } : undefined,
+      data: rows
+    });
   } catch (error) {
     console.error('Error GET /api/stok-barang:', error);
     res.status(500).json({ success: false, message: 'Gagal mengambil data stok barang', error: error.message });
@@ -782,7 +1019,7 @@ app.get('/api/stok-barang', async (req, res) => {
 
 /**
  * POST /api/stok-barang
- * Menambahkan data stok barang fisik yang sudah ada di klinik
+ * Menambahkan data stok barang fisik yang sudah ada di klinik dengan validasi ketat
  */
 app.post('/api/stok-barang', async (req, res) => {
   try {
@@ -795,17 +1032,17 @@ app.post('/api/stok-barang', async (req, res) => {
       });
     }
 
-    const cleanKode = (kode_barang && kode_barang.trim())
-      ? kode_barang.trim().toUpperCase()
-      : 'BRG-' + Math.floor(1000 + Math.random() * 9000);
-    const cleanNama = nama_barang.trim();
-    const cleanKategori = kategori.trim().toUpperCase();
+    const cleanTanggal = (tanggal_masuk && isValidDate(tanggal_masuk))
+      ? tanggal_masuk
+      : new Date().toISOString().split('T')[0];
+    const cleanKode = sanitizeString(kode_barang, 50).toUpperCase() || ('BRG-' + Math.floor(1000 + Math.random() * 9000));
+    const cleanNama = sanitizeString(nama_barang, 255);
+    const cleanKategori = sanitizeString(kategori, 100).toUpperCase();
     const cleanJumlah = Math.max(1, parseInt(jumlah, 10) || 1);
-    const cleanSatuan = (satuan && satuan.trim()) ? satuan.trim() : 'unit';
+    const cleanSatuan = sanitizeString(satuan, 50) || 'unit';
     const cleanKondisi = ['Baik', 'Rusak Ringan', 'Rusak Berat'].includes(kondisi) ? kondisi : 'Baik';
-    const cleanRuangan = (ruangan && ruangan.trim()) ? ruangan.trim() : 'Poli Umum';
-    const cleanTanggal = tanggal_masuk || new Date().toISOString().split('T')[0];
-    const cleanKeterangan = (keterangan && keterangan.trim()) ? keterangan.trim() : 'Stok Awal Klinik';
+    const cleanRuangan = sanitizeString(ruangan, 100) || 'Poli Umum';
+    const cleanKeterangan = sanitizeString(keterangan, 255) || 'Stok Awal Klinik';
 
     if (isSupabase) {
       const { data, error } = await supabase.from('stok_barang').insert([{
@@ -862,7 +1099,7 @@ app.post('/api/stok-barang', async (req, res) => {
 
 /**
  * PUT /api/stok-barang/:id
- * Memperbarui data stok barang klinik
+ * Memperbarui data stok barang klinik dengan validasi ketat
  */
 app.put('/api/stok-barang/:id', async (req, res) => {
   try {
@@ -876,15 +1113,17 @@ app.put('/api/stok-barang/:id', async (req, res) => {
       });
     }
 
-    const cleanKode = (kode_barang && kode_barang.trim()) ? kode_barang.trim().toUpperCase() : 'BRG-' + id;
-    const cleanNama = nama_barang.trim();
-    const cleanKategori = kategori.trim().toUpperCase();
+    const cleanTanggal = (tanggal_masuk && isValidDate(tanggal_masuk))
+      ? tanggal_masuk
+      : new Date().toISOString().split('T')[0];
+    const cleanKode = sanitizeString(kode_barang, 50).toUpperCase() || ('BRG-' + id);
+    const cleanNama = sanitizeString(nama_barang, 255);
+    const cleanKategori = sanitizeString(kategori, 100).toUpperCase();
     const cleanJumlah = Math.max(1, parseInt(jumlah, 10) || 1);
-    const cleanSatuan = (satuan && satuan.trim()) ? satuan.trim() : 'unit';
+    const cleanSatuan = sanitizeString(satuan, 50) || 'unit';
     const cleanKondisi = ['Baik', 'Rusak Ringan', 'Rusak Berat'].includes(kondisi) ? kondisi : 'Baik';
-    const cleanRuangan = (ruangan && ruangan.trim()) ? ruangan.trim() : 'Poli Umum';
-    const cleanTanggal = tanggal_masuk || new Date().toISOString().split('T')[0];
-    const cleanKeterangan = (keterangan && keterangan.trim()) ? keterangan.trim() : 'Stok Awal Klinik';
+    const cleanRuangan = sanitizeString(ruangan, 100) || 'Poli Umum';
+    const cleanKeterangan = sanitizeString(keterangan, 255) || 'Stok Awal Klinik';
 
     if (isSupabase) {
       const { data, error } = await supabase.from('stok_barang').update({
@@ -971,9 +1210,100 @@ app.delete('/api/stok-barang/:id', async (req, res) => {
   }
 });
 
+// ====================================================================
+// HEALTH CHECK ENDPOINT (VPS & PM2 MONITORING)
+// ====================================================================
+app.get('/api/health', async (req, res) => {
+  let dbStatus = 'disconnected';
+  try {
+    if (useSupabase) {
+      const { error } = await supabase.from('pengaturan_klinik').select('id').limit(1);
+      dbStatus = error ? `error: ${error.message}` : 'connected (supabase)';
+    } else {
+      await pool.query('SELECT 1');
+      dbStatus = 'connected (mysql)';
+    }
+    res.json({
+      status: 'ok',
+      uptime: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString(),
+      database: dbStatus
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      uptime: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString(),
+      database: `error: ${err.message}`
+    });
+  }
+});
+
+// ====================================================================
+// BACKUP DATABASE MANUAL (ONE-CLICK BACKUP JSON)
+// ====================================================================
+app.get('/api/backup', async (req, res) => {
+  try {
+    let settings = null;
+    let transactions = [];
+    let stok = [];
+
+    if (useSupabase) {
+      const [sRes, tRes, bRes] = await Promise.all([
+        supabase.from('pengaturan_klinik').select('*').limit(1),
+        supabase.from('transaksi').select('*').order('tanggal', { ascending: true }),
+        supabase.from('stok_barang').select('*').order('nama_barang', { ascending: true })
+      ]);
+      settings = (sRes.data && sRes.data[0]) || null;
+      transactions = tRes.data || [];
+      stok = bRes.data || [];
+    } else {
+      const [[sRows], [tRows], [bRows]] = await Promise.all([
+        pool.query('SELECT * FROM pengaturan_klinik LIMIT 1'),
+        pool.query('SELECT * FROM transaksi ORDER BY tanggal ASC, id ASC'),
+        pool.query('SELECT * FROM stok_barang ORDER BY nama_barang ASC')
+      ]);
+      settings = sRows[0] || null;
+      transactions = tRows || [];
+      stok = bRows || [];
+    }
+
+    const backupData = {
+      app: 'Sistem Laporan Inventaris & Pengeluaran/Pemasukan Klinik Aisyiyah',
+      exported_at: new Date().toISOString(),
+      pengaturan: settings,
+      total_transaksi: transactions.length,
+      total_stok_barang: stok.length,
+      transaksi: transactions,
+      stok_barang: stok
+    };
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename=backup_klinik_${dateStr}.json`);
+    res.send(JSON.stringify(backupData, null, 2));
+  } catch (err) {
+    console.error('Error generating backup:', err);
+    res.status(500).json({ success: false, message: 'Gagal membuat cadangan database', error: err.message });
+  }
+});
+
 // Route utama untuk menyajikan index.html secara langsung
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Global Error Handler Middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled server error:', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500).json({
+    success: false,
+    message: 'Terjadi kesalahan internal pada server',
+    error: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message
+  });
 });
 
 // Jalankan Server (Hanya jika dijalankan langsung / di luar lingkungan serverless Vercel)
