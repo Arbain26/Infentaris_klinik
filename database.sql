@@ -65,8 +65,12 @@ CREATE TABLE IF NOT EXISTS `transaksi` (
   `satuan` VARCHAR(50) DEFAULT 'satuan',
   `nominal` BIGINT NOT NULL,
   `metode` ENUM('Tunai', 'Transfer') DEFAULT 'Tunai',
+  `foto_bukti` LONGTEXT DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Tambahkan kolom foto_bukti jika tabel transaksi sudah ada sebelumnya
+ALTER TABLE `transaksi` ADD COLUMN IF NOT EXISTS `foto_bukti` LONGTEXT DEFAULT NULL;
 
 -- Indeks untuk pencarian dan filter cepat
 CREATE INDEX IF NOT EXISTS `idx_tanggal` ON `transaksi` (`tanggal`);

@@ -155,6 +155,11 @@
       document.getElementById('footerGrandTotalPengeluaran').innerText = formatRupiah(totalPengeluaran);
       document.getElementById('footerSisaSaldo').innerText = formatRupiah(sisaSaldo);
       document.getElementById('tfootTotalPemasukan').innerText = formatRupiah(totalPemasukan);
+
+      // Update Mini Saldo di Sidebar & Badges
+      const sidebarMiniSaldo = document.getElementById('sidebarMiniSaldo');
+      if (sidebarMiniSaldo) sidebarMiniSaldo.innerText = formatRupiah(sisaSaldo);
+      if (typeof updateSidebarBadges === 'function') updateSidebarBadges();
     }
 
     function updatePeriodeLabel(tahun, bulan, dariTgl, sampaiTgl) {
@@ -203,7 +208,7 @@
       if (pengeluaranItems.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="7" class="py-12 text-center text-slate-400">
+            <td colspan="8" class="py-12 text-center text-slate-400">
               <i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-300"></i>
               <p class="font-medium text-slate-600">Tidak ada data transaksi pengeluaran</p>
               <p class="text-xs text-slate-400 mt-1">Coba sesuaikan filter atau tambahkan transaksi baru</p>
@@ -234,7 +239,7 @@
         // Baris Sub-Header Kategori (Tebal & Menonjol)
         html += `
           <tr class="bg-slate-100/90 border-t-2 border-b border-slate-300">
-            <td colspan="7" class="py-2.5 px-4 font-bold text-slate-800 tracking-wide text-xs uppercase flex items-center gap-2">
+            <td colspan="8" class="py-2.5 px-4 font-bold text-slate-800 tracking-wide text-xs uppercase flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span>
               <span>Kategori: ${kategori}</span>
               <span class="text-[11px] font-normal text-slate-500 lowercase">(${items.length} item)</span>
@@ -265,6 +270,18 @@
                   ${item.metode}
                 </span>
               </td>
+              <td class="py-2.5 px-4 text-center whitespace-nowrap">
+                ${item.foto_bukti ? `
+                  <button type="button" onclick="openModalPreviewFoto(${item.id})"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-semibold shadow-xs transition-colors"
+                    title="Lihat Foto Bukti Nota">
+                    <i class="fa-solid fa-receipt text-emerald-600"></i>
+                    <span>Lihat</span>
+                  </button>
+                ` : `
+                  <span class="text-slate-300 text-xs font-mono">-</span>
+                `}
+              </td>
               <td class="py-2.5 px-4 text-right font-semibold text-slate-800 whitespace-nowrap">
                 ${formatRupiah(nominal)}
               </td>
@@ -285,7 +302,7 @@
         // Baris Sub-Total "Jumlah" Khusus Kategori Ini
         html += `
           <tr class="bg-emerald-50/60 font-bold border-b-2 border-emerald-200 text-slate-900">
-            <td colspan="5" class="py-2.5 px-4 text-right uppercase tracking-wider text-xs text-emerald-900">
+            <td colspan="6" class="py-2.5 px-4 text-right uppercase tracking-wider text-xs text-emerald-900">
               Jumlah (${kategori}) :
             </td>
             <td class="py-2.5 px-4 text-right text-emerald-800 font-bold whitespace-nowrap">
@@ -299,7 +316,7 @@
       // Baris "JUMLAH TOTAL" di Paling Bawah Setelah Seluruh Kategori Selesai
       html += `
         <tr class="bg-slate-800 text-white font-extrabold text-sm border-t-4 border-slate-900 shadow-inner">
-          <td colspan="5" class="py-4 px-6 text-right uppercase tracking-wider">
+          <td colspan="6" class="py-4 px-6 text-right uppercase tracking-wider">
             JUMLAH TOTAL :
           </td>
           <td class="py-4 px-4 text-right text-base text-white font-extrabold whitespace-nowrap">
@@ -323,7 +340,7 @@
       if (pemasukanItems.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="7" class="py-12 text-center text-slate-400">
+            <td colspan="8" class="py-12 text-center text-slate-400">
               <i class="fa-solid fa-hand-holding-dollar text-3xl mb-2 text-slate-300"></i>
               <p class="font-medium text-slate-600">Belum ada riwayat dana masuk pada periode ini</p>
               <button onclick="openModalTambahPemasukan()" class="mt-3 inline-flex items-center px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100">
@@ -352,6 +369,18 @@
           }">
                 ${item.metode}
               </span>
+            </td>
+            <td class="py-3 px-4 text-center whitespace-nowrap">
+              ${item.foto_bukti ? `
+                <button type="button" onclick="openModalPreviewFoto(${item.id})"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-semibold shadow-xs transition-colors"
+                  title="Lihat Foto Bukti Transfer/Kas">
+                  <i class="fa-solid fa-file-invoice text-emerald-600"></i>
+                  <span>Lihat</span>
+                </button>
+              ` : `
+                <span class="text-slate-300 text-xs font-mono">-</span>
+              `}
             </td>
             <td class="py-3 px-4 text-right font-bold text-emerald-700 whitespace-nowrap">
               ${formatRupiah(nominal)}
@@ -389,6 +418,7 @@
       document.getElementById('modalTransaksiTitle').innerText = 'Tambah Transaksi Baru';
       document.getElementById('btnSubmitTransaksi').innerText = 'Simpan Transaksi';
       document.getElementById('nominalPreview').innerText = 'Rp 0';
+      hapusFotoBukti();
 
       const modal = document.getElementById('modalTransaksi');
       modal.classList.remove('hidden');
@@ -455,7 +485,8 @@
         return;
       }
 
-      const payload = { tanggal, jenis, kategori, uraian, satuan, nominal, metode };
+      const foto_bukti = document.getElementById('transaksiFotoBukti')?.value || null;
+      const payload = { tanggal, jenis, kategori, uraian, satuan, nominal, metode, foto_bukti };
 
       try {
         let res;
@@ -508,6 +539,25 @@
       document.getElementById('nominalPreview').innerText = formatRupiah(item.nominal);
       document.getElementById('inputMetode').value = item.metode || 'Tunai';
 
+      // Load foto bukti jika ada
+      if (item.foto_bukti) {
+        const inputHidden = document.getElementById('transaksiFotoBukti');
+        const imgPreview = document.getElementById('fotoPreviewImg');
+        const fileNameEl = document.getElementById('fotoFileName');
+        const fileSizeEl = document.getElementById('fotoFileSize');
+        const placeholder = document.getElementById('fotoUploadPlaceholder');
+        const previewContainer = document.getElementById('fotoPreviewContainer');
+
+        if (inputHidden) inputHidden.value = item.foto_bukti;
+        if (imgPreview) imgPreview.src = item.foto_bukti;
+        if (fileNameEl) fileNameEl.innerText = 'Foto Nota Tersimpan';
+        if (fileSizeEl) fileSizeEl.innerText = 'Foto terlampir';
+        if (placeholder) placeholder.classList.add('hidden');
+        if (previewContainer) previewContainer.classList.remove('hidden');
+      } else {
+        hapusFotoBukti();
+      }
+
       document.getElementById('modalTransaksiTitle').innerText = `Edit Transaksi #${item.id}`;
       document.getElementById('btnSubmitTransaksi').innerText = 'Perbarui Transaksi';
 
@@ -542,4 +592,118 @@
 
     // ====================================================================
     // MODAL PENGATURAN KLINIK
-    // ====================================================================
+    // ====================================================================
+
+
+    // ====================================================================
+    // FITUR UPLOAD & PREVIEW FOTO BUKTI / NOTA TRANSAKSI
+    // ====================================================================
+
+    function handleFotoBuktiSelect(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showToast('Silakan pilih file gambar (JPG, PNG, WebP)', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        const rawBase64 = evt.target.result;
+        compressImage(rawBase64, 1280, 0.75, function (compressedBase64) {
+          const inputHidden = document.getElementById('transaksiFotoBukti');
+          const imgPreview = document.getElementById('fotoPreviewImg');
+          const fileNameEl = document.getElementById('fotoFileName');
+          const fileSizeEl = document.getElementById('fotoFileSize');
+          const placeholder = document.getElementById('fotoUploadPlaceholder');
+          const previewContainer = document.getElementById('fotoPreviewContainer');
+
+          if (inputHidden) inputHidden.value = compressedBase64;
+          if (imgPreview) imgPreview.src = compressedBase64;
+          if (fileNameEl) fileNameEl.innerText = file.name;
+          const kb = Math.round((compressedBase64.length * 3 / 4) / 1024);
+          if (fileSizeEl) fileSizeEl.innerText = `${kb} KB (Terkonversi & Siap Simpan)`;
+          if (placeholder) placeholder.classList.add('hidden');
+          if (previewContainer) previewContainer.classList.remove('hidden');
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function compressImage(srcBase64, maxWidth, quality, callback) {
+      const img = new Image();
+      img.onload = function () {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        callback(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = function () {
+        callback(srcBase64);
+      };
+      img.src = srcBase64;
+    }
+
+    function hapusFotoBukti() {
+      const fileInput = document.getElementById('inputFotoBukti');
+      const inputHidden = document.getElementById('transaksiFotoBukti');
+      const imgPreview = document.getElementById('fotoPreviewImg');
+      const placeholder = document.getElementById('fotoUploadPlaceholder');
+      const previewContainer = document.getElementById('fotoPreviewContainer');
+
+      if (fileInput) fileInput.value = '';
+      if (inputHidden) inputHidden.value = '';
+      if (imgPreview) imgPreview.src = '';
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (previewContainer) previewContainer.classList.add('hidden');
+    }
+
+    function openModalPreviewFoto(id) {
+      const item = allTransactions.find(t => t.id === Number(id));
+      if (!item || !item.foto_bukti) {
+        showToast('Foto bukti nota tidak tersedia untuk transaksi ini', 'error');
+        return;
+      }
+
+      const modal = document.getElementById('modalPreviewFoto');
+      const img = document.getElementById('previewFotoImgFull');
+      const title = document.getElementById('previewFotoTitle');
+      const meta = document.getElementById('previewFotoMeta');
+      const btnDownload = document.getElementById('btnDownloadFoto');
+
+      if (img) img.src = item.foto_bukti;
+      if (title) title.innerText = `Bukti Nota: ${item.uraian}`;
+      if (meta) {
+        meta.innerHTML = `
+          <div class="font-bold text-slate-800 text-sm sm:text-base">${escapeHtml(item.uraian)}</div>
+          <div class="text-xs text-slate-500 mt-1">${formatTanggalIndo(item.tanggal)} • ${escapeHtml(item.kategori)} • Metode ${item.metode}</div>
+          <div class="text-base sm:text-lg font-extrabold text-emerald-700 mt-1.5">${formatRupiah(item.nominal)}</div>
+        `;
+      }
+      if (btnDownload) {
+        btnDownload.href = item.foto_bukti;
+        btnDownload.download = `Nota_${item.tanggal}_${(item.uraian || 'transaksi').replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
+      }
+
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeModalPreviewFoto() {
+      const modal = document.getElementById('modalPreviewFoto');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }

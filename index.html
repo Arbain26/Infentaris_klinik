@@ -90,69 +90,198 @@
   </style>
 </head>
 
-<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+<body class="text-slate-800 antialiased min-h-screen bg-slate-50 flex">
 
-  <!-- TOP HEADER / NAVBAR -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between min-h-[4.25rem] sm:h-20 py-2 sm:py-0 gap-2">
+  <!-- MOBILE SIDEBAR BACKDROP OVERLAY -->
+  <div id="sidebarBackdrop" onclick="toggleSidebar(false)"
+    class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs hidden lg:hidden transition-opacity"></div>
 
-        <!-- Logo & Title Klinik -->
-        <div class="flex items-center space-x-2.5 sm:space-x-3.5 min-w-0">
-          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white border border-slate-200 p-1 flex items-center justify-center shadow-sm shrink-0">
-            <img id="headerLogoImg" src="/public/images/logo.png" alt="Logo Aisyiyah" class="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
-          </div>
-          <div class="min-w-0">
-            <div class="flex items-center gap-1.5 sm:gap-2">
-              <h1 id="headerNamaKlinikTitle" class="text-sm sm:text-base md:text-lg font-bold tracking-tight text-slate-900 leading-tight truncate">
-                KLINIK AISYIYAH PANGKAJENE
-              </h1>
-              <span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-semibold bg-emerald-100 text-emerald-800 shrink-0">
-                Online
-              </span>
-            </div>
-            <p id="headerAlamatKlinik" class="text-[11px] sm:text-xs text-slate-500 font-medium flex items-center gap-1 sm:gap-1.5 mt-0.5 truncate">
-              <i class="fa-solid fa-location-dot text-emerald-600 text-[10px] sm:text-xs shrink-0"></i>
-              <span class="truncate">Jl. Andi Cammi. No. 17 Pangkajene Kab. Sidenreng Rappang</span>
-            </p>
-            <p id="headerKontakKlinik" class="text-[11px] text-slate-400 mt-0.5 hidden sm:block">
-              Email: klinikaisyiyahpangkajene@gmail.com • Hp. 0878-3117-7100
-            </p>
-          </div>
+  <!-- SIDEBAR NAVIGATION (STICKY ON DESKTOP, OFF-CANVAS ON MOBILE) -->
+  <aside id="appSidebar"
+    class="fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200/90 flex flex-col transition-transform duration-300 transform -translate-x-full lg:translate-x-0 lg:static lg:h-screen lg:sticky top-0 shrink-0 shadow-lg lg:shadow-none">
+
+    <!-- Sidebar Header (Logo & Brand) -->
+    <div class="h-20 px-5 flex items-center justify-between border-b border-slate-100 shrink-0">
+      <div class="flex items-center space-x-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 p-1 flex items-center justify-center shadow-xs shrink-0">
+          <img src="/public/images/logo.png" alt="Logo Klinik" class="w-8 h-8 object-contain" />
         </div>
-
-        <!-- Tombol Aksi Utama -->
-        <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
-          <!-- Tombol Pengaturan Klinik -->
-          <button onclick="openModalPengaturan()" title="Pengaturan Kop & Tanda Tangan"
-            class="inline-flex items-center justify-center p-2 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200">
-            <i class="fa-solid fa-gear sm:mr-1.5 text-slate-600"></i>
-            <span class="hidden sm:inline">Pengaturan</span>
-          </button>
-
-          <!-- Tombol Tambah Barang Klinik (Baru: Non-Kas) -->
-          <button onclick="openModalTambahStok()" title="Tambah Barang yang Sudah Tersedia di Klinik (Tidak Mempengaruhi Kas)"
-            class="inline-flex items-center px-2.5 py-2 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 shadow-sm transition-all hover:shadow">
-            <i class="fa-solid fa-boxes-stacked sm:mr-1.5 text-indigo-600"></i>
-            <span class="hidden md:inline">+ Barang Klinik</span>
-            <span class="inline md:hidden text-[11px] sm:text-xs">+ Barang</span>
-          </button>
-
-          <!-- Tombol Tambah Transaksi Kas -->
-          <button onclick="openModalTambah()"
-            class="inline-flex items-center px-2.5 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm shadow-emerald-600/30 transition-all hover:shadow-md">
-            <i class="fa-solid fa-circle-plus sm:mr-2 text-xs sm:text-sm"></i>
-            <span class="hidden md:inline">Catat Transaksi</span>
-            <span class="inline md:hidden text-[11px] sm:text-xs">+ Kas</span>
-          </button>
+        <div class="min-w-0">
+          <h1 class="text-sm font-extrabold text-slate-900 leading-tight truncate">
+            KLINIK AISYIYAH
+          </h1>
+          <p class="text-[11px] font-semibold text-emerald-600 flex items-center gap-1.5 mt-0.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
+            <span>Pangkajene • Online</span>
+          </p>
         </div>
-
       </div>
+      <!-- Close button on mobile -->
+      <button onclick="toggleSidebar(false)" class="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
     </div>
-  </header>
 
-  <!-- MAIN CONTAINER -->
-  <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 w-full flex-1">
+    <!-- Sidebar Navigation Items (Scrollable) -->
+    <div class="flex-1 overflow-y-auto px-3.5 py-4 space-y-6">
+
+      <!-- Section 1: MENU UTAMA LAPORAN -->
+      <div>
+        <p class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
+          Menu Utama Laporan
+        </p>
+        <nav class="space-y-1.5" id="sidebarMenuNav">
+          <!-- 1. Stok & Barang Tersedia (Klinik) -->
+          <button id="sidebarBtnStok" onclick="switchTab('stok'); closeMobileSidebar();"
+            class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/25 text-left">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-7 h-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-sm shrink-0">
+                <i class="fa-solid fa-boxes-stacked"></i>
+              </span>
+              <span class="truncate">Stok & Barang Tersedia (Klinik)</span>
+            </div>
+            <span id="sidebarBadgeStok" class="nav-badge text-[11px] px-2 py-0.5 rounded-full font-bold bg-white/20 text-white">0</span>
+          </button>
+
+          <!-- 2. Laporan Inventaris & Pengeluaran -->
+          <button id="sidebarBtnPengeluaran" onclick="switchTab('pengeluaran'); closeMobileSidebar();"
+            class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-left">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm shrink-0">
+                <i class="fa-solid fa-receipt text-rose-600"></i>
+              </span>
+              <span class="truncate">Laporan Inventaris & Pengeluaran</span>
+            </div>
+            <span id="sidebarBadgePengeluaran" class="nav-badge text-[11px] px-2 py-0.5 rounded-full font-bold bg-slate-100 text-slate-600">0</span>
+          </button>
+
+          <!-- 3. Dana Masuk / Pemasukan Kas -->
+          <button id="sidebarBtnPemasukan" onclick="switchTab('pemasukan'); closeMobileSidebar();"
+            class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-left">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm shrink-0">
+                <i class="fa-solid fa-vault text-emerald-600"></i>
+              </span>
+              <span class="truncate">Dana Masuk / Pemasukan Kas</span>
+            </div>
+            <span id="sidebarBadgePemasukan" class="nav-badge text-[11px] px-2 py-0.5 rounded-full font-bold bg-slate-100 text-slate-600">0</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Section 2: AKSI CEPAT TRANSAKSI -->
+      <div>
+        <p class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
+          Aksi & Pencatatan
+        </p>
+        <div class="space-y-1.5">
+          <button onclick="openModalTambah(); closeMobileSidebar();"
+            class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-600/30 transition-all text-left">
+            <i class="fa-solid fa-circle-plus text-sm"></i>
+            <span>Catat Transaksi Kas</span>
+          </button>
+
+          <button onclick="openModalTambahStok(); closeMobileSidebar();"
+            class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors text-left">
+            <i class="fa-solid fa-boxes-stacked text-sm text-indigo-600"></i>
+            <span>+ Barang Klinik (Aset)</span>
+          </button>
+
+          <button onclick="openModalAturSaldo(); closeMobileSidebar();"
+            class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200/80 border border-slate-200 transition-colors text-left">
+            <i class="fa-solid fa-arrows-rotate text-sm text-blue-600"></i>
+            <span>Atur Ulang Saldo Kas</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Section 3: PENGATURAN KLINIK -->
+      <div>
+        <p class="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
+          Konfigurasi
+        </p>
+        <button onclick="openModalPengaturan(); closeMobileSidebar();"
+          class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors text-left">
+          <i class="fa-solid fa-gear text-sm text-slate-500"></i>
+          <span>Pengaturan Kop & TTD</span>
+        </button>
+      </div>
+
+      <!-- Mini Card Saldo Terkini di Sidebar -->
+      <div class="p-3.5 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl text-white shadow-xs">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sisa Saldo Kas</span>
+        <div class="text-base font-extrabold tracking-tight text-white mt-0.5" id="sidebarMiniSaldo">Rp 0</div>
+        <div class="mt-2 pt-2 border-t border-slate-700/60 flex items-center justify-between text-[10px] text-slate-300">
+          <span>Klinik Pratama</span>
+          <span class="text-emerald-400 font-semibold flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+            <span>Tersinkron</span>
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Sidebar Footer -->
+    <div class="p-3.5 border-t border-slate-100 bg-slate-50/70 text-[11px] text-slate-500 flex items-center justify-between shrink-0">
+      <div class="truncate">
+        <span class="font-bold text-slate-700">Aisyiyah</span> Pangkajene
+      </div>
+      <span class="text-[10px] font-mono px-1.5 py-0.5 bg-slate-200/70 rounded text-slate-600 font-semibold">v2.1</span>
+    </div>
+
+  </aside>
+
+  <!-- MAIN WRAPPER (KANAN) -->
+  <div class="flex-1 flex flex-col min-w-0 min-h-screen">
+
+    <!-- TOP HEADER / NAVBAR -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 sm:h-20 gap-3">
+
+          <!-- Left: Hamburger button for mobile & Active Tab Heading -->
+          <div class="flex items-center gap-3 min-w-0">
+            <button onclick="toggleSidebar(true)" title="Buka Menu Sidebar"
+              class="lg:hidden p-2.5 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors shrink-0">
+              <i class="fa-solid fa-bars text-base"></i>
+            </button>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h1 id="headerViewTitle" class="text-sm sm:text-base md:text-lg font-bold tracking-tight text-slate-900 leading-tight truncate">
+                  Stok & Barang Tersedia (Klinik)
+                </h1>
+                <span id="headerViewBadge" class="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-100 text-indigo-800 shrink-0">
+                  Non-Kas / Stok Fisik
+                </span>
+              </div>
+              <p id="headerAlamatKlinik" class="text-xs text-slate-500 font-medium flex items-center gap-1.5 mt-0.5 truncate">
+                <i class="fa-solid fa-location-dot text-emerald-600 text-xs shrink-0"></i>
+                <span id="headerNamaKlinikTitle" class="truncate">KLINIK AISYIYAH PANGKAJENE</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Right: Tombol Aksi Cepat Header -->
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="openModalTambahStok()" title="Tambah Barang Klinik"
+              class="hidden sm:inline-flex items-center px-3.5 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors">
+              <i class="fa-solid fa-boxes-stacked mr-1.5 text-indigo-600"></i>
+              <span>+ Barang Klinik</span>
+            </button>
+            <button onclick="openModalTambah()"
+              class="inline-flex items-center px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm shadow-emerald-600/30 transition-all">
+              <i class="fa-solid fa-circle-plus mr-1.5 sm:mr-2 text-xs sm:text-sm"></i>
+              <span>Catat Transaksi</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 w-full flex-1">
 
     <!-- 3 SUMMARY CARDS -->
     <section class="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-5 mb-6 sm:mb-8">
@@ -334,39 +463,6 @@
       </div>
     </section>
 
-    <!-- TAB TAMPILAN -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-      <div class="flex w-full sm:w-auto p-1 bg-slate-200/80 rounded-xl space-x-1 overflow-x-auto">
-        <!-- TAB 1: STOK & BARANG TERSEDIA (NON-KAS) -->
-        <button id="tabStokBtn" onclick="switchTab('stok')"
-          class="flex-1 sm:flex-none px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900 whitespace-nowrap text-center">
-          <i class="fa-solid fa-boxes-stacked mr-1 sm:mr-1.5 text-indigo-600"></i>
-          <span class="inline sm:hidden">Stok Barang</span>
-          <span class="hidden sm:inline">Stok & Barang Tersedia (Klinik)</span>
-        </button>
-
-        <!-- TAB 2: LAPORAN PENGELUARAN & INVENTARIS -->
-        <button id="tabPengeluaranBtn" onclick="switchTab('pengeluaran')"
-          class="flex-1 sm:flex-none px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm whitespace-nowrap text-center">
-          <i class="fa-solid fa-receipt mr-1 sm:mr-1.5 text-rose-600"></i>
-          <span class="inline sm:hidden">Pengeluaran</span>
-          <span class="hidden sm:inline">Laporan Inventaris & Pengeluaran</span>
-        </button>
-
-        <!-- TAB 3: DANA MASUK / PEMASUKAN KAS -->
-        <button id="tabPemasukanBtn" onclick="switchTab('pemasukan')"
-          class="flex-1 sm:flex-none px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 whitespace-nowrap text-center">
-          <i class="fa-solid fa-vault mr-1 sm:mr-1.5 text-emerald-600"></i>
-          <span class="inline sm:hidden">Pemasukan</span>
-          <span class="hidden sm:inline">Dana Masuk / Pemasukan Kas</span>
-        </button>
-      </div>
-
-      <div class="text-xs font-semibold text-slate-500 hidden lg:block">
-        Format Resmi Klinik Pratama Aisyiyah
-      </div>
-    </div>
-
     <!-- VIEW 1: TABEL LAPORAN INVENTARIS & PENGELUARAN (GROUPING PER KATEGORI) -->
     <div id="viewPengeluaran" class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden mb-12">
 
@@ -426,6 +522,7 @@
               <th scope="col" class="py-2.5 px-3 sm:py-3 sm:px-4 font-bold min-w-[180px]">Jenis Barang / Uraian</th>
               <th scope="col" class="py-2.5 px-3 sm:py-3 sm:px-4 w-20 sm:w-28 text-center font-bold">Satuan</th>
               <th scope="col" class="py-2.5 px-3 sm:py-3 sm:px-4 w-24 sm:w-28 text-center font-bold">Metode</th>
+              <th scope="col" class="py-2.5 px-3 sm:py-3 sm:px-4 w-24 sm:w-28 text-center font-bold">Bukti Nota</th>
               <th scope="col" class="py-2.5 px-3 sm:py-3 sm:px-4 w-36 sm:w-44 text-right font-bold whitespace-nowrap">Harga / Nominal (Rp)</th>
               <th scope="col" class="py-2.5 px-3 sm:py-3 sm:px-4 w-20 sm:w-24 text-center font-bold print:hidden">Aksi</th>
             </tr>
@@ -532,6 +629,7 @@
               <th scope="col" class="py-2.5 px-3 sm:py-3 sm:px-4 font-bold">Keterangan Sumber Dana</th>
               <th scope="col" class="py-2.5 px-3 sm:py-3 sm:px-4 w-28 sm:w-36 font-bold">Kategori</th>
               <th scope="col" class="py-2.5 px-3 sm:py-3 sm:px-4 w-24 sm:w-28 text-center font-bold">Metode</th>
+              <th scope="col" class="py-2.5 px-3 sm:py-3 sm:px-4 w-24 sm:w-28 text-center font-bold">Bukti Transfer</th>
               <th scope="col" class="py-2.5 px-3 sm:py-3 sm:px-4 w-36 sm:w-44 text-right font-bold">Nominal (Rp)</th>
               <th scope="col" class="py-2.5 px-3 sm:py-3 sm:px-4 w-20 sm:w-24 text-center font-bold">Aksi</th>
             </tr>
@@ -541,7 +639,7 @@
           </tbody>
           <tfoot>
             <tr class="bg-emerald-50 font-bold text-slate-900 border-t-2 border-emerald-300">
-              <td colspan="5" class="py-3 px-3 sm:py-3.5 sm:px-4 text-right uppercase tracking-wider text-xs sm:text-sm text-emerald-900">
+              <td colspan="6" class="py-3 px-3 sm:py-3.5 sm:px-4 text-right uppercase tracking-wider text-xs sm:text-sm text-emerald-900">
                 TOTAL SELURUH PEMASUKAN :
               </td>
               <td class="py-3 px-3 sm:py-3.5 sm:px-4 text-right text-emerald-700 font-extrabold text-sm sm:text-base whitespace-nowrap" id="tfootTotalPemasukan">
@@ -727,6 +825,8 @@
     </div>
   </footer>
 
+  </div> <!-- End Main Wrapper (Right Side) -->
+
   <!-- ==================================================================== -->
   <!-- MODAL: FORM TRANSAKSI (TAMBAH / EDIT DATA) -->
   <!-- ==================================================================== -->
@@ -882,6 +982,56 @@
                 class="w-full text-sm font-bold rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 py-2.5 pl-11 pr-3 border transition-colors">
             </div>
             <p id="nominalPreview" class="text-xs text-slate-400 mt-1 italic">Rp 0</p>
+          </div>
+
+          <!-- Upload Foto Bukti Nota / Struk -->
+          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-camera text-emerald-600"></i>
+                <span>Foto Bukti / Nota Transaksi</span>
+              </label>
+              <span class="text-[11px] text-slate-400 font-medium">Opsional (Struk / Kuitansi)</span>
+            </div>
+
+            <!-- Input File Hidden & Input Base64 Hidden -->
+            <input type="file" id="inputFotoBukti" accept="image/*" class="hidden" onchange="handleFotoBuktiSelect(event)">
+            <input type="hidden" id="transaksiFotoBukti" value="">
+
+            <!-- Tombol Dropzone Upload -->
+            <div id="fotoUploadPlaceholder" onclick="document.getElementById('inputFotoBukti').click()"
+              class="cursor-pointer border-2 border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/40 rounded-xl p-3.5 text-center transition-all group">
+              <div class="flex flex-col items-center justify-center gap-1 text-slate-500">
+                <div class="w-9 h-9 rounded-full bg-slate-100 group-hover:bg-emerald-100 flex items-center justify-center transition-colors">
+                  <i class="fa-solid fa-cloud-arrow-up text-base text-slate-500 group-hover:text-emerald-600 transition-colors"></i>
+                </div>
+                <span class="text-xs font-semibold text-slate-700 group-hover:text-emerald-700">Klik untuk ambil foto nota / pilih gambar</span>
+                <span class="text-[11px] text-slate-400">Kamera HP langsung atau galeri file (JPG, PNG, WebP)</span>
+              </div>
+            </div>
+
+            <!-- Preview Foto Ketika Sudah Dipilih -->
+            <div id="fotoPreviewContainer" class="hidden rounded-xl border border-slate-200 bg-white p-2.5">
+              <div class="flex items-center gap-3">
+                <img id="fotoPreviewImg" src="" alt="Bukti Transaksi" class="w-14 h-14 object-cover rounded-lg border border-slate-200 shadow-xs cursor-pointer hover:opacity-90" onclick="const f = document.getElementById('transaksiFotoBukti').value; if(f){ const w = window.open(''); w.document.write('<img src=\'' + f + '\' style=\'max-width:100%\'>'); }">
+                <div class="flex-1 min-w-0 text-left">
+                  <p class="text-xs font-bold text-slate-800 truncate" id="fotoFileName">bukti_nota.jpg</p>
+                  <p class="text-[11px] text-emerald-600 font-semibold" id="fotoFileSize">Siap disimpan</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <button type="button" onclick="document.getElementById('inputFotoBukti').click()" class="text-[11px] font-semibold text-slate-600 hover:text-slate-900 underline">
+                      Ganti Foto
+                    </button>
+                    <span class="text-slate-300">•</span>
+                    <button type="button" onclick="hapusFotoBukti()" class="text-[11px] font-semibold text-rose-600 hover:text-rose-800 underline">
+                      Hapus
+                    </button>
+                  </div>
+                </div>
+                <button type="button" onclick="hapusFotoBukti()" title="Hapus Foto" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition-colors">
+                  <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1322,6 +1472,58 @@
         </div>
 
       </form>
+    </div>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- MODAL: PREVIEW FOTO BUKTI / NOTA TRANSAKSI (LIGHTBOX) -->
+  <!-- ==================================================================== -->
+  <div id="modalPreviewFoto"
+    class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div
+      class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-xl w-full max-h-[92vh] flex flex-col my-auto overflow-hidden transform transition-all">
+
+      <!-- Header Preview -->
+      <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+            <i class="fa-solid fa-receipt text-sm"></i>
+          </div>
+          <div>
+            <h3 id="previewFotoTitle" class="text-sm sm:text-base font-bold text-slate-900 truncate max-w-xs sm:max-w-md">
+              Bukti Nota Transaksi
+            </h3>
+            <p class="text-[11px] text-slate-500">Lampiran bukti kuitansi / struk pengeluaran</p>
+          </div>
+        </div>
+        <button onclick="closeModalPreviewFoto()"
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Container Gambar -->
+      <div class="p-4 sm:p-6 overflow-y-auto flex-1 flex flex-col items-center justify-center bg-slate-950/5">
+        <div class="relative max-w-full flex items-center justify-center rounded-xl overflow-hidden bg-slate-900/10 p-2 shadow-inner">
+          <img id="previewFotoImgFull" src="" alt="Bukti Nota Transaksi"
+            class="max-h-[55vh] max-w-full object-contain rounded-lg shadow-md border border-slate-200 bg-white">
+        </div>
+        <div id="previewFotoMeta" class="mt-4 text-center w-full px-2"></div>
+      </div>
+
+      <!-- Footer Modal Preview -->
+      <div class="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+        <a id="btnDownloadFoto" href="" download="bukti_transaksi.jpg"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl shadow-xs transition-colors">
+          <i class="fa-solid fa-download text-xs text-slate-600"></i>
+          <span>Unduh Gambar</span>
+        </a>
+        <button type="button" onclick="closeModalPreviewFoto()"
+          class="px-4 py-2 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-900 rounded-xl transition-colors">
+          Tutup
+        </button>
+      </div>
+
     </div>
   </div>
 

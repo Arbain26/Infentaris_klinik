@@ -105,8 +105,9 @@ async function initMysqlDatabase() {
         \`satuan\` VARCHAR(50) NOT NULL DEFAULT 'Unit',
         \`harga_satuan\` BIGINT NOT NULL DEFAULT 0,
         \`nominal\` BIGINT NOT NULL,
-        \`metode\` ENUM('BCA', 'BRI', 'BSI', 'Tunai') NOT NULL DEFAULT 'Tunai',
+        \`metode\` VARCHAR(50) NOT NULL DEFAULT 'Tunai',
         \`bukti_nota\` VARCHAR(255) DEFAULT NULL,
+        \`foto_bukti\` LONGTEXT DEFAULT NULL,
         \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
@@ -115,7 +116,8 @@ async function initMysqlDatabase() {
       ALTER TABLE \`transaksi\`
         ADD COLUMN IF NOT EXISTS \`volume\` INT NOT NULL DEFAULT 1 AFTER \`uraian\`,
         ADD COLUMN IF NOT EXISTS \`satuan\` VARCHAR(50) NOT NULL DEFAULT 'Unit' AFTER \`volume\`,
-        ADD COLUMN IF NOT EXISTS \`harga_satuan\` BIGINT NOT NULL DEFAULT 0 AFTER \`satuan\`;
+        ADD COLUMN IF NOT EXISTS \`harga_satuan\` BIGINT NOT NULL DEFAULT 0 AFTER \`satuan\`,
+        ADD COLUMN IF NOT EXISTS \`foto_bukti\` LONGTEXT DEFAULT NULL;
     `);
 
     await connection.query(`

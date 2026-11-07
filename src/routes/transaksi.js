@@ -148,7 +148,7 @@ router.get('/', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { tanggal, jenis, kategori, uraian, satuan, nominal, metode } = req.body;
+    const { tanggal, jenis, kategori, uraian, satuan, nominal, metode, foto_bukti } = req.body;
 
     if (!tanggal || !kategori || !uraian || nominal === undefined || nominal === null) {
       return res.status(400).json({
@@ -178,6 +178,7 @@ router.post('/', async (req, res) => {
     const cleanSatuan = sanitizeString(satuan, 50) || '-';
     const cleanNominal = parsedNominal;
     const cleanMetode = metode === 'Transfer' ? 'Transfer' : 'Tunai';
+    const cleanFotoBukti = (foto_bukti && typeof foto_bukti === 'string' && foto_bukti.trim()) ? foto_bukti.trim() : null;
 
     if (isSupabase) {
       const { data, error } = await supabase.from('transaksi').insert([{
@@ -187,7 +188,8 @@ router.post('/', async (req, res) => {
         uraian: cleanUraian,
         satuan: cleanSatuan,
         nominal: cleanNominal,
-        metode: cleanMetode
+        metode: cleanMetode,
+        foto_bukti: cleanFotoBukti
       }]).select().single();
 
       if (error) throw error;
@@ -201,11 +203,11 @@ router.post('/', async (req, res) => {
 
     // MySQL Insert
     const sql = `
-      INSERT INTO transaksi (tanggal, jenis, kategori, uraian, satuan, nominal, metode)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO transaksi (tanggal, jenis, kategori, uraian, satuan, nominal, metode, foto_bukti)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const [result] = await pool.query(sql, [
-      tanggal, cleanJenis, cleanKategori, cleanUraian, cleanSatuan, cleanNominal, cleanMetode
+      tanggal, cleanJenis, cleanKategori, cleanUraian, cleanSatuan, cleanNominal, cleanMetode, cleanFotoBukti
     ]);
 
     res.status(201).json({
@@ -219,7 +221,8 @@ router.post('/', async (req, res) => {
         uraian: cleanUraian,
         satuan: cleanSatuan,
         nominal: cleanNominal,
-        metode: cleanMetode
+        metode: cleanMetode,
+        foto_bukti: cleanFotoBukti
       }
     });
   } catch (error) {
@@ -235,7 +238,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { tanggal, jenis, kategori, uraian, satuan, nominal, metode } = req.body;
+    const { tanggal, jenis, kategori, uraian, satuan, nominal, metode, foto_bukti } = req.body;
 
     if (!tanggal || !kategori || !uraian || nominal === undefined || nominal === null) {
       return res.status(400).json({
@@ -267,7 +270,7 @@ router.put('/:id', async (req, res) => {
     const cleanMetode = metode === 'Transfer' ? 'Transfer' : 'Tunai';
 
     if (isSupabase) {
-      const { data, error } = await supabase.from('transaksi').update({
+      const updateData = {
         tanggal,
         jenis: cleanJenis,
         kategori: cleanKategori,
@@ -275,7 +278,12 @@ router.put('/:id', async (req, res) => {
         satuan: cleanSatuan,
         nominal: cleanNominal,
         metode: cleanMetode
-      }).eq('id', id).select().single();
+      };
+      if (foto_bukti !== undefined) {
+        updateData.foto_bukti = (foto_bukti && typeof foto_bukti === 'string' && foto_bukti.trim()) ? foto_bukti.trim() : null;
+      }
+
+      const { data, error } = await supabase.from('transaksi').update(updateData).eq('id', id).select().single();
 
       if (error) throw error;
 
@@ -287,14 +295,21 @@ router.put('/:id', async (req, res) => {
     }
 
     // MySQL Update
-    const sql = `
+    let sql = `
       UPDATE transaksi
       SET tanggal = ?, jenis = ?, kategori = ?, uraian = ?, satuan = ?, nominal = ?, metode = ?
-      WHERE id = ?
     `;
-    const [result] = await pool.query(sql, [
-      tanggal, cleanJenis, cleanKategori, cleanUraian, cleanSatuan, cleanNominal, cleanMetode, id
-    ]);
+    const params = [tanggal, cleanJenis, cleanKategori, cleanUraian, cleanSatuan, cleanNominal, cleanMetode];
+
+    if (foto_bukti !== undefined) {
+      sql += `, foto_bukti = ?`;
+      params.push((foto_bukti && typeof foto_bukti === 'string' && foto_bukti.trim()) ? foto_bukti.trim() : null);
+    }
+
+    sql += ` WHERE id = ?`;
+    params.push(id);
+
+    const [result] = await pool.query(sql, params);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Data transaksi tidak ditemukan.' });
@@ -311,7 +326,8 @@ router.put('/:id', async (req, res) => {
         uraian: cleanUraian,
         satuan: cleanSatuan,
         nominal: cleanNominal,
-        metode: cleanMetode
+        metode: cleanMetode,
+        foto_bukti
       }
     });
   } catch (error) {
