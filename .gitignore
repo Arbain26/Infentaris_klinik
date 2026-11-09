@@ -1,9 +1,66 @@
-node_modules/
+# ====================================================================
+# 1. Kredensial & Lingkungan Sensitif (CRITICAL)
+# ====================================================================
 .env
-.DS_Store
-Thumbs.db
+.env.*
+.env.local
+.env.development
+.env.test
+.env.production
+!.env.example
+
+# Kunci SSL / Sertifikat Kriptografi
+*.pem
+*.key
+*.crt
+*.cert
+*.pfx
+*.p12
+
+# ====================================================================
+# 2. Dependensi & Build Artifacts
+# ====================================================================
+node_modules/
+dist/
+build/
+.vercel/
+
+# ====================================================================
+# 3. File Log & Monitoring (VPS / PM2)
+# ====================================================================
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+.pids
+*.pid
+*.seed
+*.pid.lock
 
-.vercel
+# ====================================================================
+# 4. Cadangan Database & Data Transaksi Klinik
+# ====================================================================
+backup_*.json
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.backup
+*.bak
+
+# ====================================================================
+# 5. File Sistem Operasi & IDE Editor
+# ====================================================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
