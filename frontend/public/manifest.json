@@ -1,0 +1,19 @@
+{
+  "name": "Sistem Inventaris & Keuangan Klinik Aisyiyah",
+  "short_name": "Klinik Aisyiyah",
+  "description": "Sistem Laporan Inventaris, Stok Barang, dan Pengeluaran/Pemasukan Kas Klinik Pratama Aisyiyah Pangkajene",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#059669",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/public/images/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

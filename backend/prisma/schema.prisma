@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model PengaturanKlinik {
+  id            Int    @id @default(1)
+  nama_klinik   String @default("KLINIK AISYIYAH PANGKAJENE") @db.VarChar(150)
+  alamat        String @default("Jl. Andi Cammi. No. 17 Pangkajene Kabupaten Sidenreng Rappang, Provinsi Sulawesi Selatan") @db.VarChar(255)
+  email         String @default("klinikaisyiyahpangkajene@gmail.com") @db.VarChar(100)
+  telepon       String @default("0878-3117-7100") @db.VarChar(50)
+  kota          String @default("Pangkajene") @db.VarChar(100)
+  jabatan_kiri  String @default("Kepala Klinik") @db.VarChar(150)
+  nama_kiri     String @default("dr. Syah Rizal Syam Pohan") @db.VarChar(150)
+  nip_kiri      String @default("SIP: 139/SIPD/DPMPTSP/11/2022") @db.VarChar(100)
+  jabatan_kanan String @default("Pemegang Barang") @db.VarChar(150)
+  nama_kanan    String @default("Hera A.md.Keb") @db.VarChar(150)
+
+  @@map("pengaturan_klinik")
+}
+
+model Transaksi {
+  id           Int      @id @default(autoincrement())
+  tanggal      DateTime @db.Date
+  jenis        String   @default("Pengeluaran") @db.VarChar(20)
+  kategori     String   @db.VarChar(100)
+  uraian       String   @db.Text
+  volume       Int      @default(1)
+  satuan       String   @default("Unit") @db.VarChar(50)
+  harga_satuan BigInt   @default(0)
+  nominal      BigInt
+  metode       String   @default("Tunai") @db.VarChar(50)
+  bukti_nota   String?  @db.VarChar(255)
+  foto_bukti   String?  @db.LongText
+  created_at   DateTime @default(now())
+
+  @@map("transaksi")
+}
+
+model StokBarang {
+  id            Int       @id @default(autoincrement())
+  kode_barang   String?   @db.VarChar(50)
+  nama_barang   String    @db.VarChar(200)
+  kategori      String    @default("Lainnya") @db.VarChar(100)
+  jumlah        Int       @default(0)
+  satuan        String    @default("Unit") @db.VarChar(50)
+  kondisi       String    @default("Baik") @db.VarChar(50)
+  ruangan       String    @default("Umum") @db.VarChar(100)
+  sumber_dana   String?   @default("Klinik") @db.VarChar(100)
+  tanggal_masuk DateTime? @db.Date
+  keterangan    String?   @db.Text
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @default(now()) @updatedAt
+
+  @@map("stok_barang")
+}

@@ -8,6 +8,8 @@
 .env.test
 .env.production
 !.env.example
+backend/.env
+frontend/.env.local
 
 # Kunci SSL / Sertifikat Kriptografi
 *.pem
@@ -21,8 +23,13 @@
 # 2. Dependensi & Build Artifacts
 # ====================================================================
 node_modules/
+*/node_modules/
 dist/
+*/dist/
 build/
+*/build/
+.next/
+*/.next/
 .vercel/
 
 # ====================================================================
