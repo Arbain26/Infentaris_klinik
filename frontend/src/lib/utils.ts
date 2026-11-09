@@ -23,3 +23,4 @@ export function formatDateIndo(dateStr: string): string {
     year: "numeric",
   }).format(date);
 }
+

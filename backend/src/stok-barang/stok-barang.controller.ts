@@ -41,3 +41,4 @@ export class StokBarangController {
     return this.stokBarangService.remove(id);
   }
 }
+

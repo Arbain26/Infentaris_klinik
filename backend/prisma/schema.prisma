@@ -58,3 +58,4 @@ model StokBarang {
 
   @@map("stok_barang")
 }
+

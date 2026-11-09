@@ -156,3 +156,4 @@ server {
 4. **Unggah Foto Bukti Transaksi**: Kompatibel dengan kamera smartphone dan file browser dengan preview modal instan.
 5. **Sesuaikan Saldo Kas**: Perhitungan atomic transaksi untuk mengatur ulang kas secara cepat dan aman.
 6. **Cadangan Data 1-Klik**: Endpoint `/api/backup` untuk mengunduh seluruh database inventaris & transaksi dalam format JSON.
+

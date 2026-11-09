@@ -20,3 +20,4 @@ export class ResetSaldoDto {
   @IsString()
   mode?: string; // 'bersihkan_dan_set' atau 'selisih'
 }
+

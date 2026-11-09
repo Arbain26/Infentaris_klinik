@@ -50,3 +50,4 @@ export class CreateTransaksiDto {
   @IsString()
   foto_bukti?: string;
 }
+

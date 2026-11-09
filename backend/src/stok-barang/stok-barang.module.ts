@@ -8,3 +8,4 @@ import { StokBarangService } from './stok-barang.service.js';
   exports: [StokBarangService],
 })
 export class StokBarangModule {}
+

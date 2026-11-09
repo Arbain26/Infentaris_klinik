@@ -44,3 +44,4 @@ export class UpdateStokBarangDto {
   @IsString()
   keterangan?: string;
 }
+

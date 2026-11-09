@@ -44,3 +44,4 @@ export class CreateStokBarangDto {
   @IsString()
   keterangan?: string;
 }
+

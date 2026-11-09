@@ -135,3 +135,4 @@ export const api = {
     return fetchJson<any>('/health');
   },
 };
+

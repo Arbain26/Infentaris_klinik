@@ -50,3 +50,4 @@ export interface PaginationInfo {
   total: number;
   totalPages: number;
 }
+

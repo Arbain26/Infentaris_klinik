@@ -37,3 +37,4 @@ export class QueryTransaksiDto {
   @IsString()
   limit?: string;
 }
+

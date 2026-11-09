@@ -255,3 +255,4 @@ export function exportToPDF(
   const cleanClinicName = (pengaturan?.nama_klinik || 'Klinik').replace(/[^a-zA-Z0-9]/g, '_');
   doc.save(`Laporan_Inventaris_${cleanClinicName}_${filterInfo.tahun || 'Semua'}.pdf`);
 }
+

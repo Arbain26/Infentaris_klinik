@@ -286,3 +286,4 @@ export const StokModal: React.FC<StokModalProps> = ({
     </div>
   );
 };
+

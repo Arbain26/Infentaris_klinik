@@ -21,3 +21,4 @@ export class PengaturanController {
     return this.pengaturanService.getKategori();
   }
 }
+

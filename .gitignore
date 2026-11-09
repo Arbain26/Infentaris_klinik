@@ -1,39 +1,63 @@
 # ====================================================================
-# 1. Kredensial & Lingkungan Sensitif (CRITICAL)
+# 🛡️ KEAMANAN TINGKAT TINGGI: KREDENSIAL & ENVIRONMENT SENSITIF
 # ====================================================================
+# Jangan pernah commit file environment nyata
 .env
 .env.*
 .env.local
 .env.development
 .env.test
 .env.production
-!.env.example
-backend/.env
-frontend/.env.local
+*.env
+**/.env
+**/.env.*
+**/.env.local
+**/.env.production
 
-# Kunci SSL / Sertifikat Kriptografi
+# Pengecualian hanya untuk template contoh kredensial
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+
+# Kunci Kriptografi, SSL, TLS & SSH
 *.pem
 *.key
 *.crt
 *.cert
 *.pfx
 *.p12
+*.csr
+id_rsa*
+id_ed25519*
+known_hosts*
+
+# Token, Kredensial Cloud & Secrets
+credentials.json
+client_secret*.json
+*.secret
+secrets.*
 
 # ====================================================================
-# 2. Dependensi & Build Artifacts
+# 📦 DEPENDENSI & BUILD ARTIFACTS
 # ====================================================================
 node_modules/
 */node_modules/
+**/node_modules/
 dist/
 */dist/
+**/dist/
 build/
 */build/
+**/build/
 .next/
 */.next/
+**/next/
 .vercel/
+out/
+coverage/
 
 # ====================================================================
-# 3. File Log & Monitoring (VPS / PM2)
+# 📊 FILE LOG & RUNTIME PROSES (VPS / PM2)
 # ====================================================================
 logs/
 *.log
@@ -47,18 +71,21 @@ pnpm-debug.log*
 *.pid.lock
 
 # ====================================================================
-# 4. Cadangan Database & Data Transaksi Klinik
+# 💾 CADANGAN DATABASE & DATA SENSITIF KLINIK
 # ====================================================================
 backup_*.json
+**/backup_*.json
 *.sqlite
 *.sqlite3
 *.db
 *.dump
 *.backup
 *.bak
+*.sql.gz
+*.tar.gz
 
 # ====================================================================
-# 5. File Sistem Operasi & IDE Editor
+# 🖥️ FILE SISTEM OPERASI & IDE EDITOR
 # ====================================================================
 .DS_Store
 Thumbs.db

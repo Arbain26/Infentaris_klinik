@@ -47,3 +47,4 @@ export class TransaksiController {
     return this.transaksiService.remove(id);
   }
 }
+

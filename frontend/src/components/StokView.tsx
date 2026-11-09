@@ -365,3 +365,4 @@ export const StokView: React.FC<StokViewProps> = ({
     </div>
   );
 };
+

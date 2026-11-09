@@ -8,3 +8,4 @@ import { TransaksiService } from './transaksi.service.js';
   exports: [TransaksiService],
 })
 export class TransaksiModule {}
+

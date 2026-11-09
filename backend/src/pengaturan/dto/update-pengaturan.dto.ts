@@ -41,3 +41,4 @@ export class UpdatePengaturanDto {
   @IsString()
   nama_kanan?: string;
 }
+

@@ -8,3 +8,4 @@ import { PengaturanService } from './pengaturan.service.js';
   exports: [PengaturanService],
 })
 export class PengaturanModule {}
+
