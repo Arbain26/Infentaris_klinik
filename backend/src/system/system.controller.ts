@@ -1,4 +1,4 @@
-import { Controller, Get, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { SystemService } from './system.service.js';
 
@@ -22,5 +22,9 @@ export class SystemController {
     );
     return res.send(JSON.stringify(backup, null, 2));
   }
-}
 
+  @Post('restore')
+  async restoreBackup(@Body() payload: any) {
+    return this.systemService.restoreBackup(payload);
+  }
+}

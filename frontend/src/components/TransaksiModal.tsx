@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Save, Image as ImageIcon, Camera, Trash2 } from 'lucide-react';
+import { X, Save, Camera, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
 import { Transaksi } from '@/lib/types';
 import { api } from '@/lib/api';
 
@@ -164,24 +164,26 @@ export const TransaksiModal: React.FC<TransaksiModalProps> = ({
               <button
                 type="button"
                 onClick={() => setJenis('Pengeluaran')}
-                className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all ${
+                className={`py-2 px-3 text-xs font-bold rounded-lg border flex items-center justify-center gap-1.5 transition-all ${
                   jenis === 'Pengeluaran'
                     ? 'bg-rose-50 border-rose-300 text-rose-700 shadow-xs'
                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                🔴 Pengeluaran
+                <TrendingDown className="w-3.5 h-3.5 text-rose-600" />
+                <span>Pengeluaran</span>
               </button>
               <button
                 type="button"
                 onClick={() => setJenis('Pemasukan')}
-                className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all ${
+                className={`py-2 px-3 text-xs font-bold rounded-lg border flex items-center justify-center gap-1.5 transition-all ${
                   jenis === 'Pemasukan'
                     ? 'bg-emerald-50 border-emerald-300 text-emerald-700 shadow-xs'
                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                🟢 Pemasukan
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Pemasukan</span>
               </button>
             </div>
           </div>

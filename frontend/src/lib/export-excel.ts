@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import { Transaksi, PengaturanKlinik } from './types';
+import { Transaksi, StokBarang, PengaturanKlinik } from './types';
 import { LOGO_AISYIYAH_BASE64 } from './logo-data';
 import { formatDateIndo } from './utils';
 
@@ -297,6 +297,235 @@ export async function exportToExcel(
   }
 
   // Trigger browser download
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.click();
+  window.URL.revokeObjectURL(url);
+}
+
+export async function exportStokToExcel(
+  stokList: StokBarang[],
+  pengaturan: PengaturanKlinik,
+  filterInfo?: {
+    kategori?: string;
+    kondisi?: string;
+    ruangan?: string;
+  }
+) {
+  const cleanClinicName = (pengaturan?.nama_klinik || 'Klinik').replace(/[^a-zA-Z0-9]/g, '_');
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  const fileName = `Laporan_Aset_Inventaris_${cleanClinicName}_${dateStr}.xlsx`;
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Daftar Aset & Stok', {
+    views: [{ showGridLines: true }],
+  });
+
+  // Embed Logo
+  try {
+    const logoId = wb.addImage({
+      base64: LOGO_AISYIYAH_BASE64,
+      extension: 'png',
+    });
+    ws.addImage(logoId, {
+      tl: { col: 0.15, row: 0.15 },
+      ext: { width: 56, height: 56 },
+    });
+  } catch (err) {
+    console.warn('Gagal menyematkan gambar ke ExcelJS:', err);
+  }
+
+  // Row heights
+  ws.getRow(1).height = 22;
+  ws.getRow(2).height = 16;
+  ws.getRow(3).height = 16;
+  ws.getRow(4).height = 8;
+  ws.getRow(5).height = 20;
+  ws.getRow(6).height = 18;
+  ws.getRow(7).height = 10;
+
+  // Header Texts (Cols B to H)
+  ws.mergeCells('B1:H1');
+  const cellNama = ws.getCell('B1');
+  cellNama.value = (pengaturan?.nama_klinik || 'KLINIK AISYIYAH PANGKAJENE').toUpperCase();
+  cellNama.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FF0F172A' } };
+  cellNama.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  ws.mergeCells('B2:H2');
+  const cellAlamat = ws.getCell('B2');
+  cellAlamat.value =
+    pengaturan?.alamat ||
+    'Jl. Andi Cammi. No. 17 Pangkajene Kabupaten Sidenreng Rappang, Provinsi Sulawesi Selatan';
+  cellAlamat.font = { name: 'Calibri', size: 9, color: { argb: 'FF334155' } };
+  cellAlamat.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  ws.mergeCells('B3:H3');
+  const cellKontak = ws.getCell('B3');
+  cellKontak.value = `Email: ${pengaturan?.email || 'klinikaisyiyahpangkajene@gmail.com'}   Hp. ${pengaturan?.telepon || '0878-3117-7100'}`;
+  cellKontak.font = { name: 'Calibri', size: 9, color: { argb: 'FF334155' } };
+  cellKontak.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  // Divider line
+  ws.mergeCells('A4:H4');
+  const sepCell = ws.getCell('A4');
+  sepCell.border = { bottom: { style: 'medium', color: { argb: 'FF0F172A' } } };
+
+  // Title
+  ws.mergeCells('A5:H5');
+  const cellJudul = ws.getCell('A5');
+  cellJudul.value = 'BUKU INDUK INVENTARIS ASET & BARANG KLINIK';
+  cellJudul.font = { name: 'Calibri', size: 12, bold: true, color: { argb: 'FF0F172A' } };
+  cellJudul.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  ws.mergeCells('A6:H6');
+  const cellPeriode = ws.getCell('A6');
+  let filterSubtitle = `TANGGAL CETAK : ${formatDateIndo(dateStr).toUpperCase()}`;
+  if (filterInfo?.kategori && filterInfo.kategori !== 'semua') {
+    filterSubtitle += ` | KATEGORI: ${filterInfo.kategori}`;
+  }
+  if (filterInfo?.kondisi && filterInfo.kondisi !== 'semua') {
+    filterSubtitle += ` | KONDISI: ${filterInfo.kondisi}`;
+  }
+  if (filterInfo?.ruangan && filterInfo.ruangan !== 'semua') {
+    filterSubtitle += ` | RUANGAN: ${filterInfo.ruangan}`;
+  }
+  cellPeriode.value = filterSubtitle;
+  cellPeriode.font = { name: 'Calibri', size: 10, bold: true, italic: true, color: { argb: 'FF0369A1' } };
+  cellPeriode.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  // Columns Width
+  ws.columns = [
+    { key: 'no', width: 6 },
+    { key: 'kode', width: 14 },
+    { key: 'nama', width: 38 },
+    { key: 'kategori', width: 18 },
+    { key: 'jumlah', width: 14 },
+    { key: 'kondisi', width: 16 },
+    { key: 'ruangan', width: 20 },
+    { key: 'sumber', width: 18 },
+  ];
+
+  // Header Row
+  let r = 8;
+  const headers = ['No', 'Kode Barang', 'Nama Barang / Aset', 'Kategori', 'Jumlah Unit', 'Kondisi Fisik', 'Lokasi Ruangan', 'Sumber Anggaran'];
+  const headerRow = ws.getRow(r);
+  headerRow.height = 24;
+  headers.forEach((h, idx) => {
+    const cell = headerRow.getCell(idx + 1);
+    cell.value = h;
+    cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
+    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+  });
+  r++;
+
+  const borderThin: Partial<ExcelJS.Borders> = {
+    top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+    bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+    left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+    right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+  };
+
+  let totalUnit = 0;
+  stokList.forEach((item, idx) => {
+    const itemRow = ws.getRow(r);
+    itemRow.height = 18;
+    const jml = Number(item.jumlah) || 0;
+    totalUnit += jml;
+
+    const cells = [
+      { val: idx + 1, align: 'center' },
+      { val: item.kode_barang || '-', align: 'center' },
+      { val: item.nama_barang, align: 'left' },
+      { val: item.kategori, align: 'center' },
+      { val: `${jml} ${item.satuan}`, align: 'center' },
+      { val: item.kondisi, align: 'center' },
+      { val: item.ruangan, align: 'left' },
+      { val: item.sumber_dana || '-', align: 'center' },
+    ];
+
+    cells.forEach((c, cIdx) => {
+      const cell = itemRow.getCell(cIdx + 1);
+      cell.value = c.val;
+      cell.font = { name: 'Calibri', size: 9, color: { argb: 'FF1E293B' } };
+      cell.alignment = { horizontal: c.align as any, vertical: 'middle' };
+      cell.border = borderThin;
+    });
+
+    r++;
+  });
+
+  // Total Unit Row
+  const totalRow = ws.getRow(r);
+  totalRow.height = 22;
+  ws.mergeCells(`A${r}:D${r}`);
+  const lblTot = ws.getCell(`A${r}`);
+  lblTot.value = 'TOTAL KESELURUHAN UNIT FISIK';
+  lblTot.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+  lblTot.alignment = { horizontal: 'right', vertical: 'middle' };
+  lblTot.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
+
+  ws.mergeCells(`E${r}:H${r}`);
+  const valTot = ws.getCell(`E${r}`);
+  valTot.value = `${totalUnit.toLocaleString('id-ID')} Unit Terdaftar`;
+  valTot.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+  valTot.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+  valTot.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
+  r += 2;
+
+  // Signatures Block
+  const kota = pengaturan?.kota || 'Pangkajene';
+  const tglIndo = formatDateIndo(dateStr);
+
+  ws.mergeCells(`E${r}:H${r}`);
+  const signDateCell = ws.getCell(`E${r}`);
+  signDateCell.value = `${kota}, ${tglIndo}`;
+  signDateCell.font = { name: 'Calibri', size: 10 };
+  signDateCell.alignment = { horizontal: 'center', vertical: 'middle' };
+  r++;
+
+  ws.mergeCells(`A${r}:D${r}`);
+  const signLeftRole = ws.getCell(`A${r}`);
+  signLeftRole.value = pengaturan?.jabatan_kiri || 'Kepala Klinik';
+  signLeftRole.font = { name: 'Calibri', size: 10, bold: true };
+  signLeftRole.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  ws.mergeCells(`E${r}:H${r}`);
+  const signRightRole = ws.getCell(`E${r}`);
+  signRightRole.value = pengaturan?.jabatan_kanan || 'Pemegang Barang';
+  signRightRole.font = { name: 'Calibri', size: 10, bold: true };
+  signRightRole.alignment = { horizontal: 'center', vertical: 'middle' };
+  r += 4;
+
+  ws.mergeCells(`A${r}:D${r}`);
+  const signLeftName = ws.getCell(`A${r}`);
+  signLeftName.value = pengaturan?.nama_kiri || 'dr. Syah Rizal Syam Pohan';
+  signLeftName.font = { name: 'Calibri', size: 10, bold: true, underline: true };
+  signLeftName.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  ws.mergeCells(`E${r}:H${r}`);
+  const signRightName = ws.getCell(`E${r}`);
+  signRightName.value = pengaturan?.nama_kanan || 'Hera A.md.Keb';
+  signRightName.font = { name: 'Calibri', size: 10, bold: true, underline: true };
+  signRightName.alignment = { horizontal: 'center', vertical: 'middle' };
+  r++;
+
+  if (pengaturan?.nip_kiri) {
+    ws.mergeCells(`A${r}:D${r}`);
+    const signLeftNip = ws.getCell(`A${r}`);
+    signLeftNip.value = pengaturan.nip_kiri;
+    signLeftNip.font = { name: 'Calibri', size: 9, italic: true };
+    signLeftNip.alignment = { horizontal: 'center', vertical: 'middle' };
+  }
+
+  // Trigger download
   const buffer = await wb.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

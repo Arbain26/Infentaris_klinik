@@ -129,8 +129,14 @@ export const api = {
     });
   },
 
-  // Backup & Health
+  // Backup & Restore & Health
   getBackupUrl: () => `${API_BASE}/backup`,
+  restoreBackup: async (payload: any) => {
+    return fetchJson<{ success: boolean; message: string; restored: any }>('/restore', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
   getHealth: async () => {
     return fetchJson<any>('/health');
   },

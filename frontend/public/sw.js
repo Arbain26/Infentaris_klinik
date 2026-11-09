@@ -6,20 +6,12 @@
  * ====================================================================
  */
 
-const CACHE_NAME = 'klinik-aisyiyah-v1';
+const CACHE_NAME = 'klinik-aisyiyah-v2';
 const STATIC_ASSETS = [
   '/',
-  '/index.html',
-  '/public/manifest.json',
-  '/public/images/logo.png',
-  '/public/js/config.js',
-  '/public/js/logo-data.js',
-  '/public/js/pengaturan-saldo.js',
-  '/public/js/transaksi.js',
-  '/public/js/stok-barang.js',
-  '/public/js/export-excel.js',
-  '/public/js/export-pdf.js',
-  '/public/js/app.js'
+  '/manifest.json',
+  '/images/logo.png',
+  '/favicon.ico'
 ];
 
 self.addEventListener('install', (event) => {

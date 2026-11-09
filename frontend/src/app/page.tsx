@@ -1,18 +1,22 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Navbar } from '@/components/Navbar';
+import { Sidebar } from '@/components/Sidebar';
+import { Header } from '@/components/Header';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { TransaksiView } from '@/components/TransaksiView';
 import { StokView } from '@/components/StokView';
 import { TransaksiModal } from '@/components/TransaksiModal';
 import { StokModal } from '@/components/StokModal';
 import { ResetSaldoModal } from '@/components/ResetSaldoModal';
 import { PengaturanModal } from '@/components/PengaturanModal';
+import { RestoreModal } from '@/components/RestoreModal';
 import { PengaturanKlinik, Transaksi, StokBarang } from '@/lib/types';
 import { api } from '@/lib/api';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'transaksi' | 'stok'>('transaksi');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
   const [pengaturan, setPengaturan] = useState<PengaturanKlinik | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
@@ -24,9 +28,24 @@ export default function Home() {
   const [isStokModalOpen, setIsStokModalOpen] = useState(false);
   const [editingStok, setEditingStok] = useState<StokBarang | null>(null);
   const [isResetSaldoOpen, setIsResetSaldoOpen] = useState(false);
+  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
 
   // Current balance for reset modal
   const [currentSaldo, setCurrentSaldo] = useState<number>(0);
+
+  // PWA Service Worker Registration
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((reg) => {
+          console.log('PWA Service Worker registered successfully:', reg.scope);
+        })
+        .catch((err) => {
+          console.warn('PWA Service Worker registration notice:', err);
+        });
+    }
+  }, []);
 
   const fetchInitialData = async () => {
     try {
@@ -65,13 +84,14 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Navbar Header */}
-      <Navbar
-        pengaturan={pengaturan}
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex font-sans">
+      {/* 1. Left Sidebar Navigation (Desktop Fixed, Mobile Slide-over) */}
+      <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onOpenPengaturan={() => setIsPengaturanOpen(true)}
+        pengaturan={pengaturan}
+        isOpenMobile={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
         onOpenAddTransaksi={() => {
           setEditingTransaksi(null);
           setIsTransaksiModalOpen(true);
@@ -81,55 +101,96 @@ export default function Home() {
           setIsStokModalOpen(true);
         }}
         onOpenResetSaldo={() => setIsResetSaldoOpen(true)}
-        onBackup={handleBackup}
+        onOpenBackup={handleBackup}
+        onOpenRestore={() => setIsRestoreModalOpen(true)}
+        onOpenPengaturan={() => setIsPengaturanOpen(true)}
       />
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'transaksi' ? (
-          <TransaksiView
-            pengaturan={pengaturan}
-            categories={categories}
-            onOpenAddModal={() => {
-              setEditingTransaksi(null);
-              setIsTransaksiModalOpen(true);
-            }}
-            onOpenResetSaldo={() => setIsResetSaldoOpen(true)}
-            onEditItem={(item) => {
-              setEditingTransaksi(item);
-              setIsTransaksiModalOpen(true);
-            }}
-            refreshTrigger={refreshTrigger}
-            onTriggerRefresh={handleTriggerRefresh}
-          />
-        ) : (
-          <StokView
-            onOpenAddModal={() => {
-              setEditingStok(null);
-              setIsStokModalOpen(true);
-            }}
-            onEditItem={(item) => {
-              setEditingStok(item);
-              setIsStokModalOpen(true);
-            }}
-            refreshTrigger={refreshTrigger}
-            onTriggerRefresh={handleTriggerRefresh}
-          />
-        )}
-      </main>
+      {/* 2. Main Workspace Layout */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Header */}
+        <Header
+          activeTab={activeTab}
+          pengaturan={pengaturan}
+          onOpenMobileMenu={() => setIsMobileSidebarOpen(true)}
+          onOpenAddTransaksi={() => {
+            setEditingTransaksi(null);
+            setIsTransaksiModalOpen(true);
+          }}
+          onOpenAddStok={() => {
+            setEditingStok(null);
+            setIsStokModalOpen(true);
+          }}
+          onOpenResetSaldo={() => setIsResetSaldoOpen(true)}
+          onOpenBackup={handleBackup}
+          onOpenRestore={() => setIsRestoreModalOpen(true)}
+          onOpenPengaturan={() => setIsPengaturanOpen(true)}
+        />
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
-        <p>
-          &copy; {new Date().getFullYear()}{' '}
-          <strong className="text-slate-700">
-            {pengaturan?.nama_klinik || 'Klinik Pratama Aisyiyah Pangkajene'}
-          </strong>
-          . Seluruh hak cipta dilindungi.
-        </p>
-      </footer>
+        {/* View Contents */}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-8">
+          {activeTab === 'transaksi' ? (
+            <TransaksiView
+              pengaturan={pengaturan}
+              categories={categories}
+              onOpenAddModal={() => {
+                setEditingTransaksi(null);
+                setIsTransaksiModalOpen(true);
+              }}
+              onOpenResetSaldo={() => setIsResetSaldoOpen(true)}
+              onEditItem={(item) => {
+                setEditingTransaksi(item);
+                setIsTransaksiModalOpen(true);
+              }}
+              refreshTrigger={refreshTrigger}
+              onTriggerRefresh={handleTriggerRefresh}
+            />
+          ) : (
+            <StokView
+              pengaturan={pengaturan}
+              onOpenAddModal={() => {
+                setEditingStok(null);
+                setIsStokModalOpen(true);
+              }}
+              onEditItem={(item) => {
+                setEditingStok(item);
+                setIsStokModalOpen(true);
+              }}
+              refreshTrigger={refreshTrigger}
+              onTriggerRefresh={handleTriggerRefresh}
+            />
+          )}
+        </main>
 
-      {/* Modals */}
+        {/* Footer */}
+        <footer className="border-t border-slate-200/80 bg-white py-4 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 mb-16 lg:mb-0">
+          <p>
+            &copy; {new Date().getFullYear()}{' '}
+            <strong className="text-slate-700">
+              {pengaturan?.nama_klinik || 'Klinik Pratama Aisyiyah Pangkajene'}
+            </strong>
+            . Sistem Laporan Keuangan &amp; Inventaris Klinik.
+          </p>
+        </footer>
+      </div>
+
+      {/* 3. Mobile Bottom Navigation Bar (< lg) */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onOpenAddModal={() => {
+          if (activeTab === 'transaksi') {
+            setEditingTransaksi(null);
+            setIsTransaksiModalOpen(true);
+          } else {
+            setEditingStok(null);
+            setIsStokModalOpen(true);
+          }
+        }}
+        onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
+      />
+
+      {/* 3. Global Modals */}
       <PengaturanModal
         isOpen={isPengaturanOpen}
         onClose={() => setIsPengaturanOpen(false)}
@@ -159,6 +220,12 @@ export default function Home() {
         isOpen={isResetSaldoOpen}
         onClose={() => setIsResetSaldoOpen(false)}
         currentSaldo={currentSaldo}
+        onSuccess={handleTriggerRefresh}
+      />
+
+      <RestoreModal
+        isOpen={isRestoreModalOpen}
+        onClose={() => setIsRestoreModalOpen(false)}
         onSuccess={handleTriggerRefresh}
       />
     </div>

@@ -55,7 +55,7 @@ export const ResetSaldoModal: React.FC<ResetSaldoModalProps> = ({
           spread: 70,
           origin: { y: 0.6 },
         });
-      } catch (err) {}
+      } catch {}
 
       onSuccess();
       onClose();
