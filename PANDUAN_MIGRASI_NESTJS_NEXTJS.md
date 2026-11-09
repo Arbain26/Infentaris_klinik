@@ -104,9 +104,9 @@ npm run build
 # Matikan proses express lama jika masih ada
 pm2 delete klinik-inventaris
 
-# Jalankan Backend NestJS pada port 3001
+# Jalankan Backend NestJS (Port 3001)
 cd /var/www/inventaris-klinik/backend
-pm2 start dist/src/main.js --name "klinik-api"
+pm2 start dist/main.js --name "klinik-api"
 
 # Jalankan Frontend Next.js pada port 3002
 cd /var/www/inventaris-klinik/frontend

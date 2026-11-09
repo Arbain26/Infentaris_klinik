@@ -274,7 +274,7 @@ Ringkasan perintah PM2 di VPS:
 ```bash
 # Jalankan Backend API
 cd /var/www/inventaris-klinik/backend
-pm2 start dist/src/main.js --name "klinik-api"
+pm2 start dist/main.js --name "klinik-api"
 
 # Jalankan Frontend Web
 cd /var/www/inventaris-klinik/frontend
