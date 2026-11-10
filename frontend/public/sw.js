@@ -6,12 +6,17 @@
  * ====================================================================
  */
 
-const CACHE_NAME = 'klinik-aisyiyah-v2';
+const CACHE_NAME = 'klinik-aisyiyah-v3';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
+  '/favicon.ico',
   '/images/logo.png',
-  '/favicon.ico'
+  '/images/icon-192.png',
+  '/images/icon-512.png',
+  '/images/icon-maskable-192.png',
+  '/images/icon-maskable-512.png',
+  '/images/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {

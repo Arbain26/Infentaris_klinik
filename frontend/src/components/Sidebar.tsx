@@ -12,6 +12,7 @@ import {
   UploadCloud,
   Settings,
   X,
+  Smartphone,
 } from 'lucide-react';
 import { PengaturanKlinik } from '@/lib/types';
 
@@ -27,6 +28,7 @@ interface SidebarProps {
   onOpenBackup: () => void;
   onOpenRestore: () => void;
   onOpenPengaturan: () => void;
+  onOpenInstall: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -41,6 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenBackup,
   onOpenRestore,
   onOpenPengaturan,
+  onOpenInstall,
 }) => {
   const navContent = (
     <div className="flex flex-col h-full bg-white/95 backdrop-blur-2xl text-slate-800">
@@ -225,6 +228,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <Settings className="w-4 h-4 text-slate-500" />
               <span>Pengaturan Klinik</span>
+            </button>
+
+            <button
+              onClick={() => {
+                onOpenInstall();
+                onCloseMobile();
+              }}
+              className="w-full flex items-center gap-3 px-3.5 py-2 rounded-lg text-xs font-semibold text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100/90 border border-emerald-200/60 transition-colors mt-2"
+            >
+              <Smartphone className="w-4 h-4 text-emerald-600" />
+              <span>Pasang Aplikasi (PWA)</span>
             </button>
           </div>
         </div>

@@ -1,19 +1,40 @@
 {
+  "id": "/",
   "name": "Sistem Inventaris & Keuangan Klinik Aisyiyah",
   "short_name": "Klinik Aisyiyah",
   "description": "Sistem Laporan Inventaris, Stok Barang, dan Pengeluaran/Pemasukan Kas Klinik Pratama Aisyiyah Pangkajene",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
+  "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],
+  "background_color": "#ffffff",
   "theme_color": "#059669",
   "orientation": "portrait-primary",
+  "categories": ["medical", "finance", "business"],
   "icons": [
     {
-      "src": "/images/logo.png",
-      "sizes": "192x192 512x512",
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/images/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
-

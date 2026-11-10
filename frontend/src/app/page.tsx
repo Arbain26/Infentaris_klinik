@@ -11,6 +11,7 @@ import { StokModal } from '@/components/StokModal';
 import { ResetSaldoModal } from '@/components/ResetSaldoModal';
 import { PengaturanModal } from '@/components/PengaturanModal';
 import { RestoreModal } from '@/components/RestoreModal';
+import { InstallModal } from '@/components/InstallModal';
 import { PengaturanKlinik, Transaksi, StokBarang } from '@/lib/types';
 import { api } from '@/lib/api';
 
@@ -29,23 +30,45 @@ export default function Home() {
   const [editingStok, setEditingStok] = useState<StokBarang | null>(null);
   const [isResetSaldoOpen, setIsResetSaldoOpen] = useState(false);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   // Current balance for reset modal
   const [currentSaldo, setCurrentSaldo] = useState<number>(0);
 
-  // PWA Service Worker Registration
+  // PWA Service Worker Registration & Install Prompt Capture
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/sw.js')
         .then((reg) => {
-          console.log('PWA Service Worker registered successfully:', reg.scope);
+          console.log('PWA Service Worker registered:', reg.scope);
         })
         .catch((err) => {
           console.warn('PWA Service Worker registration notice:', err);
         });
     }
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
   }, []);
+
+  const handleNativeInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      if (choiceResult && choiceResult.outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    }
+  };
 
   const fetchInitialData = async () => {
     try {
@@ -104,6 +127,7 @@ export default function Home() {
         onOpenBackup={handleBackup}
         onOpenRestore={() => setIsRestoreModalOpen(true)}
         onOpenPengaturan={() => setIsPengaturanOpen(true)}
+        onOpenInstall={() => setIsInstallModalOpen(true)}
       />
 
       {/* 2. Main Workspace Layout */}
@@ -227,6 +251,13 @@ export default function Home() {
         isOpen={isRestoreModalOpen}
         onClose={() => setIsRestoreModalOpen(false)}
         onSuccess={handleTriggerRefresh}
+      />
+
+      <InstallModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
+        onNativeInstall={handleNativeInstall}
+        canNativeInstall={!!deferredPrompt}
       />
     </div>
   );
