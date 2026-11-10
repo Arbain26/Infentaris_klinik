@@ -55,6 +55,8 @@ build/
 .vercel/
 out/
 coverage/
+*.tsbuildinfo
+**/*.tsbuildinfo
 
 # ====================================================================
 # 📊 FILE LOG & RUNTIME PROSES (VPS / PM2)
