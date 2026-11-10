@@ -28,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenPengaturan,
 }) => {
   return (
-    <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
+    <header className="sticky top-0 z-20 bg-white/75 backdrop-blur-xl backdrop-saturate-150 border-b border-white/60 shadow-[0_4px_24px_rgba(15,23,42,0.04),inset_0_-1px_0_rgba(255,255,255,0.8)] transition-all">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left: Mobile Hamburger & Page Title */}

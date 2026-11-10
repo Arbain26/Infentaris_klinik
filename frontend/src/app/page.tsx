@@ -128,7 +128,7 @@ export default function Home() {
         />
 
         {/* View Contents */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-8">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 lg:pb-8">
           {activeTab === 'transaksi' ? (
             <TransaksiView
               pengaturan={pengaturan}
@@ -163,7 +163,7 @@ export default function Home() {
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-slate-200/80 bg-white py-4 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 mb-16 lg:mb-0">
+        <footer className="border-t border-slate-200/80 bg-white py-4 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 mb-20 lg:mb-0">
           <p>
             &copy; {new Date().getFullYear()}{' '}
             <strong className="text-slate-700">

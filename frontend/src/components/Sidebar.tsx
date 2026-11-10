@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenPengaturan,
 }) => {
   const navContent = (
-    <div className="flex flex-col h-full bg-white text-slate-800">
+    <div className="flex flex-col h-full bg-white/95 backdrop-blur-2xl text-slate-800">
       {/* Brand Header */}
       <div className="p-5 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -264,7 +264,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Mobile Drawer Off-Canvas */}
       <aside
-        className={`lg:hidden fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white/95 backdrop-blur-2xl z-50 shadow-2xl border-r border-white/60 transform transition-transform duration-300 ease-in-out ${
           isOpenMobile ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
