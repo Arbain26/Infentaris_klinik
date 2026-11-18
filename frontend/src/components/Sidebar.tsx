@@ -216,7 +216,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="w-full flex items-center gap-3 px-3.5 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
             >
               <UploadCloud className="w-4 h-4 text-indigo-600" />
-              <span>Pulihkan / Restore Data</span>
+              <span>Pulihkan Data (Excel/PDF/JSON)</span>
             </button>
 
             <button

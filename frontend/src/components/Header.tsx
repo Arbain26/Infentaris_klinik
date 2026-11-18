@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={onOpenRestore}
-              title="Pulihkan Data Cadangan JSON"
+              title="Pulihkan Data Cadangan (Excel/PDF/JSON)"
               className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors"
             >
               <UploadCloud className="w-4 h-4 text-indigo-600" />
