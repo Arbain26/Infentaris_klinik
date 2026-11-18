@@ -48,7 +48,8 @@ app.use(express.static(__dirname));
 app.use('/api/transaksi', transaksiRouter);
 app.use('/api/stok-barang', stokRouter);
 app.use('/api', pengaturanRouter); // Menyajikan /api/pengaturan & /api/kategori
-app.use('/api', systemRouter);     // Menyajikan /api/health & /api/backup
+app.use('/api/system', systemRouter); // Menyajikan /api/system/backup, /api/system/restore, dll
+app.use('/api', systemRouter);        // Menyajikan /api/health, /api/backup, /api/restore
 
 // Route fallback untuk Single-Page Application (SPA)
 app.get('*', (req, res) => {
