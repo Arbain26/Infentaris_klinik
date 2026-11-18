@@ -1,18 +1,26 @@
 {
-  "name": "klinik-inventaris",
-  "version": "1.0.0",
-  "description": "Sistem Laporan Inventaris & Pengeluaran/Pemasukan Klinik",
-  "main": "server.js",
+  "name": "klinik-inventaris-monorepo",
+  "version": "2.0.0",
+  "description": "Sistem Laporan Inventaris & Pengeluaran/Pemasukan Klinik - NestJS + Next.js + Prisma",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev:backend": "npm run start:dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "build:frontend": "npm run build --prefix frontend",
+    "build": "npm run build:backend && npm run build:frontend",
+    "start:backend": "npm run start:prod --prefix backend",
+    "start:frontend": "npm run start --prefix frontend",
+    "legacy:start": "node server.js"
   },
   "keywords": [
     "klinik",
     "inventaris",
     "laporan",
     "keuangan",
-    "express",
+    "nestjs",
+    "prisma",
+    "nextjs",
     "mysql"
   ],
   "author": "",
