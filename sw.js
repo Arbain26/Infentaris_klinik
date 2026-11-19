@@ -3,6 +3,7 @@
  * SERVICE WORKER (PWA) - SISTEM KLINIK AISYIYAH
  * Menjamin aplikasi dapat diinstal ke layar utama ponsel (A2HS)
  * dan memuat aset statis secara instan.
+ * ada sedikit update
  * ====================================================================
  */
 
