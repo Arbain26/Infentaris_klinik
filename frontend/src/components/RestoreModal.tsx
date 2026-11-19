@@ -93,7 +93,7 @@ export const RestoreModal: React.FC<RestoreModalProps> = ({
     const wsStok = wb.getWorksheet('Stok & Barang Klinik') || wb.getWorksheet('Stok Barang Klinik') || wb.getWorksheet('Stok');
 
     if (wsTx) {
-      let headerMap: Record<string, number> = {};
+      const headerMap: Record<string, number> = {};
       wsTx.eachRow((row, rowNumber) => {
         if (rowNumber === 1) {
           row.eachCell((cell, colNumber) => {
@@ -125,7 +125,7 @@ export const RestoreModal: React.FC<RestoreModalProps> = ({
       });
 
       if (wsStok) {
-        let sHeaderMap: Record<string, number> = {};
+        const sHeaderMap: Record<string, number> = {};
         wsStok.eachRow((row, rowNumber) => {
           if (rowNumber === 1) {
             row.eachCell((cell, colNumber) => {
